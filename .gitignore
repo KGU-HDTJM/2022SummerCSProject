@@ -3,5 +3,10 @@
 *.exp
 *.lib
 *.pdb
+*.opendb
+*.suo
+/bin
 /bin/x64
-/MinJaeRun/.vs/MinJaeRun/v17/Browse.VC.opendb
+/Debug
+/Release
+/x64
