@@ -1,2 +1,5 @@
-﻿  main.c
-  MinJaeRun.vcxproj -> C:\Projects\HDJM2022SummerCSProject\MinJaeRun\x64\Debug\MinJaeRun.exe
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(500,5): warning MSB8004: Output 디렉터리가 슬래시로 끝나지 않습니다. Output 디렉터리의 적절한 평가를 허용하는 데 필요하므로 이 빌드 인스턴스에서 슬래시를 추가합니다.
+  main.c
+C:\Users\james\OneDrive\바탕 화면\2022SummerCs\MinJaeRun\main.c(14,28): warning C4133: '함수': 'int *'과(와) 'const Word_t *' 사이의 형식이 호환되지 않습니다.
+C:\Users\james\OneDrive\바탕 화면\2022SummerCs\MinJaeRun\main.c(15,33): warning C4133: '함수': 'int *'과(와) 'const Word_t *' 사이의 형식이 호환되지 않습니다.
+  MinJaeRun.vcxproj -> C:\Users\james\OneDrive\바탕 화면\2022SummerCs\bin\x64\MinJaeRun.exe
