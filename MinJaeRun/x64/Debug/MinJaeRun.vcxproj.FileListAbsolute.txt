@@ -1,2 +1,0 @@
-C:\Projects\HDJM2022SummerCSProject\MinJaeRun\x64\Debug\MinJaeRun.exe
-C:\Users\james\OneDrive\바탕 화면\2022SummerCs\MinJaeRun\x64\Debug\MinJaeRun.exe
