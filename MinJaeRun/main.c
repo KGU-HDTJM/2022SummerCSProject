@@ -31,7 +31,7 @@ int main(void)
 	printf("%d\n", test);
 	printf("%d\n", test1);
 
-	printf("±è´ÙÇöÀº ¿ÂÀûÀÌ ¾øÀ½..\n±è¹ÎÀç µµ¸Á°¨\n");
+	printf("±è´ÙÇö¿Ïº®..\n±è¹ÎÀç °íÀÚ\n");
 
 	ReleaseStack(minjaebaesin);
 	return 0;
