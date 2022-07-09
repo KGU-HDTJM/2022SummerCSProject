@@ -1,6 +1,8 @@
 # 2022SummerCSProject
 KGU 2022 Summer CS C-With Project
 ### 본 프로젝트는 KGU C-With(2022 Summer) 프로젝트가 마무리 될 때까지 비공개 상태
+> 프로젝트 이름은 파스칼 표기법을 따른다.
+> 기타 문서나 리소스의 폴더는 카멜 표기법을 따른다.
 
 # ⚠️Alert⚠️
 ## 코딩 표준 준수 
