@@ -11,3 +11,6 @@
 /Release
 /x64
 /.vs
+*.db-wal
+*.db-shm
+*.db
