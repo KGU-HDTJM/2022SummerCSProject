@@ -5,9 +5,9 @@
 *.pdb
 *.opendb
 *.suo
-/bin/
-/bin/x64/
-/Debug/
-/Release/
-/x64/
-/.vs/
+/bin
+/bin/x64
+/Debug
+/Release
+/x64
+/.vs
