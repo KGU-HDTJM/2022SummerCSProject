@@ -22,7 +22,7 @@ size_t __cdecl GetVertexLength(FILE* objFile)
 			{
 				if (buf[0] == 'v')
 				{
-					vertexCount++;
+					vertexCount += 3;
 				}
 				else if (buf[0] == '#')
 				{
@@ -38,24 +38,34 @@ RET_GET_VERTEX_LENGTH:
 	return vertexCount;
 }
 
-float* __cdecl GetVertexFromObjFileMalloc(const char* objFile, size_t* length)
+const float* __cdecl GetVertexFromObjFileMalloc(const char* objFile, size_t* length)
 {
 	FILE* fp = fopen(objFile, "r");
 	if (fp == NULL) { return NULL; };
 	size_t vertexCount = GetVertexLength(fp);
 	float* result = malloc(sizeof(float) * vertexCount);
+	printf("%p\n", result);
 	if (result == NULL) { goto RET_GET_VERTEX; };
-	char buf[4];
-
-	for (size_t i = 0; i < vertexCount; i += 3)
+	char buf[0x80];
+	size_t polygons = vertexCount / 3 - 1;
+	for (size_t i = 0; i < polygons; i++)
 	{
-		fscanf(fp, "%s %f %f %f", buf, result + i, result + i + 1, result + i + 2);
+		if ((unsigned long long)(result + vertexCount - 1) <= (unsigned long long)(result + 3 * i + 2))
+		{
+			printf("Error\n");
+		}
+		fscanf(fp, "%s %f %f %f", buf, result + 3 * i, result + 3 * i + 1, result + 3 * i + 2);
 	}
 
 RET_GET_VERTEX:
 	*length = vertexCount;
 	fclose(fp);
 	return result;
+}
+
+void __cdecl ReleaseObjVertex(float* vertex)
+{
+	free(vertex);
 }
 
 /*

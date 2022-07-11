@@ -7,4 +7,5 @@
 #endif
 
 extern OBJ_READ_API size_t __cdecl GetVertexLength(FILE* objFile);
-extern OBJ_READ_API float* __cdecl GetVertexFromObjFileMalloc(const char* objFile, size_t* length);
+extern OBJ_READ_API const float* __cdecl GetVertexFromObjFileMalloc(const char* objFile, size_t* length);
+extern OBJ_READ_API void __cdecl ReleaseObjVertex(float* vertex);
