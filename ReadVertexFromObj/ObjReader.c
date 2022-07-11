@@ -6,7 +6,7 @@
 #define GET_VERTEX_LENGTH_BUFFER_SIZE 0x80
 #pragma warning(disable : 6031; disable : 4273)
 
-size_t __cdecl GetVertexLength(FILE* objFile)
+static size_t __cdecl GetVertexLength(FILE* objFile)
 {
 	char buf[GET_VERTEX_LENGTH_BUFFER_SIZE] = { 0, };
 	size_t vertexCount = 0;
