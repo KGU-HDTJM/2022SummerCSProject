@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
+#include "ObjReader.h"
 
 #define GET_VERTEX_LENGTH_BUFFER_SIZE 0x80
 #pragma warning(disable : 6031)
@@ -40,8 +41,8 @@ RET_GET_VERTEX_LENGTH:
 float* GetVertexFromObjFileMalloc(const char* objFile)
 {
 	FILE* fp = fopen(objFile, "r");
-	size_t vertexCount = GetVertexLength(fp);
 	if (fp == NULL) { return NULL; };
+	size_t vertexCount = GetVertexLength(fp);
 	float* result = malloc(sizeof(float) * vertexCount);
 	if (result == NULL) { fclose(fp); return NULL; };
 	char buf[4];
@@ -53,7 +54,7 @@ float* GetVertexFromObjFileMalloc(const char* objFile)
 	fclose(fp);
 	return result;
 }
-
+/*
 int main(void)
 {
 	const char* objFile = "../resource/tetris_il_ja.obj";
@@ -74,3 +75,4 @@ int main(void)
 	free(vertexArr);
 	return 0;
 }
+*/
