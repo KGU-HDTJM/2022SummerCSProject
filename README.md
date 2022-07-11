@@ -5,7 +5,7 @@ KGU 2022 Summer CS C-With Project
 > 기타 문서나 리소스의 폴더는 카멜 표기법을 따른다.
 
 # ⚠️Alert⚠️
-## OpenGL하는 재민재 브라더스 threadPool branch에 resource 폴더 안에 일자 테트리스 블럭이랑 obj파일에서 버텍스 읽어오는 dll 만들어 뒀으니까 링크는 properties에 새로 추가된 프로퍼티 시트 연결하면됨, 그래픽 강의 예제 따라가고 있는거 같던데 일단 모델링 된거 ReadVertexFromObjFile프로젝트에 있는 함수 참고해서 gl모델보다 resource에 있는 모델로 렌더링 해주고, 기본적인 변환 정도만 하고 컬러랑 텍스쳐까지 나가줘
+## OpenGL하는 재민재 브라더스 ~~threadPool branch~~ (master branch로 merge함) 에 resource 폴더 안에 일자 테트리스 블럭이랑 obj파일에서 버텍스 읽어오는 dll 만들어 뒀으니까 링크는 properties에 새로 추가된 프로퍼티 시트 연결하면됨, 그래픽 강의 예제 따라가고 있는거 같던데 일단 모델링 된거 ReadVertexFromObjFile프로젝트에 있는 함수 참고해서 gl모델보다 resource에 있는 모델로 렌더링 해주고, 기본적인 변환 정도만 하고 컬러랑 텍스쳐까지 나가줘
 ## 코딩 표준 준수 
 ### 현다재민 코딩 표준: https://github.com/KGU-HDJM/2022SummerCSProject/blob/master/docs/CodingStyleConvention.md
 예제 코드를 가져다 쓰는 것이여도 분석하는 과정에서 코딩 표준에 맞게 수정 (변수, 함수, 구조체, 변수 등의 이름을 바꿔야 할때 * Ctrl + f * 로 변수를 선택하고 replace)
