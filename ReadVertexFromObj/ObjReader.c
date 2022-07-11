@@ -50,10 +50,6 @@ const float* __cdecl GetVertexFromObjFileMalloc(const char* objFile, size_t* len
 	size_t polygons = vertexCount / 3 - 1;
 	for (size_t i = 0; i < polygons; i++)
 	{
-		if ((unsigned long long)(result + vertexCount - 1) <= (unsigned long long)(result + 3 * i + 2))
-		{
-			printf("Error\n");
-		}
 		fscanf(fp, "%s %f %f %f", buf, result + 3 * i, result + 3 * i + 1, result + 3 * i + 2);
 	}
 

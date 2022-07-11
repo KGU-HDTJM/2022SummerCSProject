@@ -7,10 +7,10 @@
 *.suo
 /bin
 /bin/x64
-/Debug
-/Release
-/x64
-/.vs
+**/Debug
+**/Release
+**/x64
+**/.vs
 *.db-wal
 *.db-shm
 *.db
