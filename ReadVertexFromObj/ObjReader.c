@@ -44,7 +44,6 @@ const float* __cdecl GetVertexFromObjFileMalloc(const char* objFile, size_t* len
 	if (fp == NULL) { return NULL; };
 	size_t vertexCount = GetVertexLength(fp);
 	float* result = malloc(sizeof(float) * vertexCount);
-	printf("%p\n", result);
 	if (result == NULL) { goto RET_GET_VERTEX; };
 	char buf[0x80];
 	size_t polygons = vertexCount / 3 - 1;
