@@ -38,19 +38,22 @@ RET_GET_VERTEX_LENGTH:
 	return vertexCount;
 }
 
-float* GetVertexFromObjFileMalloc(const char* objFile)
+float* GetVertexFromObjFileMalloc(const char* objFile, size_t* length)
 {
 	FILE* fp = fopen(objFile, "r");
 	if (fp == NULL) { return NULL; };
 	size_t vertexCount = GetVertexLength(fp);
 	float* result = malloc(sizeof(float) * vertexCount);
-	if (result == NULL) { fclose(fp); return NULL; };
+	if (result == NULL) { goto RET_GET_VERTEX; };
 	char buf[4];
 
 	for (size_t i = 0; i < vertexCount; i += 3)
 	{
 		fscanf(fp, "%s %f %f %f", buf, result + i, result + i + 1, result + i + 2);
 	}
+
+RET_GET_VERTEX:
+	*length = vertexCount;
 	fclose(fp);
 	return result;
 }
