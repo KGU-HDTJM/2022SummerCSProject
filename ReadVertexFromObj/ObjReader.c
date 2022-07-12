@@ -22,7 +22,7 @@ static size_t __cdecl GetVertexLength(FILE* objFile)
 			{
 				if (buf[0] == 'v')
 				{
-					vertexCount += 3;
+					vertexCount++;
 				}
 				else if (buf[0] == '#')
 				{
@@ -43,7 +43,7 @@ const float* __cdecl GetVertexFromObjFileMalloc(const char* objFile, size_t* pol
 	FILE* fp = fopen(objFile, "r");
 	if (fp == NULL) { return NULL; };
 	size_t vertexCount = GetVertexLength(fp);
-	float* result = malloc(sizeof(float) * vertexCount);
+	float* result = malloc(sizeof(float) * 3 * vertexCount);
 	if (result == NULL) { goto RET_GET_VERTEX; };
 	char buf[0x80];
 	size_t polygons = vertexCount / 3 - 1;
