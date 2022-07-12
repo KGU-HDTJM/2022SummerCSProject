@@ -17,8 +17,8 @@
     ```C
     struct Vector2f_s
     {
-        float x;
-        float y;
+        float X;
+        float Y;
     };
     ```
 2. 지역 변수 그리고 함수의 매개 변수의 이름은 카멜 표기법을 따른다.
