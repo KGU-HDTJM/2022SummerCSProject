@@ -38,7 +38,7 @@ RET_GET_VERTEX_LENGTH:
 	return vertexCount;
 }
 
-const float* __cdecl GetVertexFromObjFileMalloc(const char* objFile, size_t* length)
+const float* __cdecl GetVertexFromObjFileMalloc(const char* objFile, size_t* polygonLength)
 {
 	FILE* fp = fopen(objFile, "r");
 	if (fp == NULL) { return NULL; };
@@ -53,7 +53,7 @@ const float* __cdecl GetVertexFromObjFileMalloc(const char* objFile, size_t* len
 	}
 
 RET_GET_VERTEX:
-	*length = vertexCount;
+	*length = vertexCount / 3;
 	fclose(fp);
 	return result;
 }
