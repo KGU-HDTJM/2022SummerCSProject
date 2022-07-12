@@ -18,7 +18,7 @@ KGU 2022 Summer CS C-With Project
 git repo, 개발 프로세스 관리
 라이브러리 개발
 ## D(다현)
-모델링, ~~file io 관련 기능~~
+모델링, file io 관련 기능
 ## J(재민)
 git repo 관리
 ## JM(재민재 브라더스)
