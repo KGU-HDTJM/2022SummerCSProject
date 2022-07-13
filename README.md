@@ -3,7 +3,7 @@ KGU 2022 Summer CS C-With Project
 ### 본 프로젝트는 KGU C-With(2022 Summer) 프로젝트가 마무리 될 때까지 비공개 상태
 > 프로젝트 이름은 파스칼 표기법을 따른다.
 > 기타 문서나 리소스의 폴더는 카멜 표기법을 따른다.
-
+# 프로젝트 내부의 모든 문서와 코드에 있는 주석에 잘못된 내용 혹은 모호하여 오해의 소지가 있는 부분은 문제를 인식한 사람이 다른 사람에게 물어서 책임지고 고친다.
 # ⚠️Alert⚠️
 ## 프로그래밍 할때 항상 master branch에 있는 내부 문서들을 볼 수 있게 하고 특히 코딩표준 문서는 익숙해지기 전까지 코딩표준을 보면서 코딩표준에 맞춰서 코드를 작성한다.
   > 나중에 습관이니 뭐니 변명하면.. 그 코드 사용 못하게 할꺼임
@@ -15,9 +15,12 @@ KGU 2022 Summer CS C-With Project
 
 ## 비주얼 스튜디오 2022 사용
 ## 기본적인 프로세스
+  프로젝트와 관련된 모든 파일과 폴더는 git local repo에 두고 git local repo는 언제나 하나로 유지한다.
 ### 새로운 프로젝트 생성
-  > visual studio 새프로젝트 생성(Create a new project) -> 빈 프로젝트(Empty Project) 혹은 Windows Desktop Wizard -> Location은 항상 local에 있는 git폴더와 같은 위치로, 솔루션과 프로젝트를 같은 위치에 저장에 체크 -> 속성 관리자(propery manager)에서 properties 폴더에 있는 속성 시트 추가(기본적으로 HDJM2022SummerCS_x64.props는  추가해야함) -> 코드 작성
-  
+  > visual studio 새 프로젝트 생성(Create a new project) -> 빈 프로젝트(Empty Project) 혹은 Windows Desktop Wizard -> Location은 항상 local에 있는 git폴더와 같은 위치로, 솔루션과 프로젝트를 같은 위치에 저장에 체크 -> 속성 관리자(propery manager)에서 properties 폴더에 있는 속성 시트 추가(기본적으로 HDJM2022SummerCS_x64.props는  추가해야함) -> 코드 작성
+### dll 프로젝트 링크 하는법
+  >  속성 관리자(propery manager)에서 properties에 <dll 프로젝트 이름>Link.props를 추가
+
 # Roles
 ## H(현석)
 git repo, 개발 프로세스 관리
@@ -28,6 +31,3 @@ git repo, 개발 프로세스 관리
 git repo 관리
 ## JM(재민재 브라더스)
 OpenGL 그래픽스 렌더링
-
-# 구현사항 (가능한 최신을 유지)
-스택 dll라이브러리
