@@ -174,6 +174,14 @@
 52.	에러를 나타나는 상수는 define으로 헤더파일에 정의하여 사용하며 ERROR_*기능이름* 으로 시작한다.
 53.	열거형 상수는 언제나 열거형 이름으로 시작하여야 한다.
 54. inline 함수는 헤더 파일에 #define으로 구현한다.
+	```C
+	#define Z_ChangeTag(p,t) \
+	{ \
+		if (( (memblock_t *)( (byte *)(p) - sizeof(memblock_t)))->id!=0x1d4a11) \
+		I_Error("Z_CT at "__FILE__":%i",__LINE__); \
+		Z_ChangeTag2(p,t); \
+	};
+	```
 ## 소스 코드 포맷팅
 1. include 전처리문 블록과 코드 본문 사이에 반드시 빈 줄이 있어야 한다.
 2. 탭(tab)은 비주얼 스튜디오 기본값을 사용하며, 비주얼 스튜디오를 사용하지 않을 시 띄어쓰기 4칸을 탭으로 사용한다.
