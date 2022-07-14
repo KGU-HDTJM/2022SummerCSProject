@@ -129,23 +129,51 @@
     int GetFibonacciNumberRecursive(int n);
     ```
 35.	독립된 기능은 각각 독립된 소스 파일에 있어야 한다. 단, 작은 기능 몇 개를 한 파일 안에 같이 넣어두는 것이 상식적일 경우 예외를 허용한다.
-36.	표준 C assert 대신에 자신만의 Assert 버전을 구현한다. (Assert 구현 담당: 아마도 신현석)
-37.	모든 메모리 할당은 자체제작한 함수를 사용한다.
-38.	비트 플래그 열거형은 이름 뒤에 Flags를 붙인다.
-39.	특정 크기(예를 들어, 데이터 멤버의 직렬화를 위한 크기)가 필요하지 않은 한 열거형에 크기 지정자를 추가하지 않는다.
-40.	한 줄에 변수 하나만 선언한다.
-41.	전역 변수의 선언은 헤더파일 안에서 extern 키워드를 사용하여 한다.
-42.	변수는 가능한 최소한의 범위로 제한한다.
-43.	한 함수에서만 사용되는 변수는 반드시 그 함수 안에서 지역변수나 정적변수로 선언되어야 한다.
-44.	한 파일에 존재하는 여러 함수에서만 사용하는 변수가 있다면 그 변수는 그 파일 안에서 정적 변수로 선언되어야 한다.
-45.	여러 소스 파일에서 사용하는 변수들만 전역 변수로 선언한다.
-46.	초기화 목록에서 요소를 생략하여 배열을 0으로 초기화 할 때는 0 이후에 쉼표(,)를 넣어 의도가 명확히 보이도록 한다.
-47.	동적으로 할당한 메모리 주소를 저장하고 있는 포인터 변수를 연산에 사용할 때는 그 포인터의 사본을 만들어 사용한다. 이는 잘못된 메모리 해제를 막기 위함이다.
-48.	내부에서 동적으로 메모리를 할당하는 함수의 이름은 반드시 Malloc으로 끝난다.
-49.	void 형 함수는 실패하지 않는다. 실패 할 수 있는 함수가 어쩔 수 없이 void형 이여야만 하는 함수는 에러를 알려줄 변수를 포인터로 받는다.
-50.	에러를 나타나는 상수는 define으로 헤더파일에 정의하여 사용하며 ERROR_*기능이름* 으로 시작한다.
-51.	열거형 상수는 언제나 열거형 이름으로 시작하여야 한다.
-52. inline 함수는 헤더 파일에 #define으로 구현한다.
+36. 코드의 열이 너무 길어질 때에는 줄바꿈을 한다. (열이 80~120이 넘어가는 경우 열이 너무 길어졌다고 판단한다.), 이 경우 괄호를 닫는것은 언제나 새줄에서 한다.
+    ```C
+    // 틀린 예
+    printf("Max work item dimensions: %u\nMax work item sizes: %lld %lld %lld\nMax work group size: %lld\nMax compute units: %u\n", workItemDim, workItemSizes[0], workItemSizes[1], workItemSizes[2], workGroupSize, computeUnits);
+    
+    pStack_t stack = CreateStack(((sizeof(char**) + sizeof(float**) + (2 * sizeof(Vector2))) * length) + ((sizeof(char*) + sizeof(float*)) * ((screenSize.Y >> 1) + 1) * length) + ((sizeof(char) + sizeof(float)) * (((screenSize.Y * screenSize.X) >> 1) + 1) * length) + (2 * sizeof(int)) + sizeof(float));
+    ```
+    ```C
+    // 옳은 예
+   	printf(
+        "Max work item dimensions: %u\n"
+	    "Max work item sizes: %lld %lld %lld\n"
+	    "Max work group size: %lld\n"
+	    "Max compute units: %u\n",
+	    workItemDim, 
+	    workItemSizes[0], workItemSizes[1], workItemSizes[2], 
+	    workGroupSize,
+	    computeUnits
+    );
+    
+    // 연산자로 새로운 줄이 시작하게 한다.
+    pStack_t stack = CreateStack(
+		((sizeof(char**) + sizeof(float**) + (2 * sizeof(Vector2))) * length)
+		+ ((sizeof(char*) + sizeof(float*)) * ((screenSize.Y >> 1) + 1) * length)
+		+ ((sizeof(char) + sizeof(float)) * (((screenSize.Y * screenSize.X) >> 1) + 1)
+		* length) + (2 * sizeof(int)) + sizeof(float)
+	);
+    ```
+38.	표준 C assert 대신에 자신만의 Assert 버전을 구현한다. (Assert 구현 담당: 아마도 신현석)
+39.	모든 메모리 할당은 자체제작한 함수를 사용한다.
+40.	비트 플래그 열거형은 이름 뒤에 Flags를 붙인다.
+41.	특정 크기(예를 들어, 데이터 멤버의 직렬화를 위한 크기)가 필요하지 않은 한 열거형에 크기 지정자를 추가하지 않는다.
+42.	한 줄에 변수 하나만 선언한다.
+43.	전역 변수의 선언은 헤더파일 안에서 extern 키워드를 사용하여 한다.
+44.	변수는 가능한 최소한의 범위로 제한한다.
+45.	한 함수에서만 사용되는 변수는 반드시 그 함수 안에서 지역변수나 정적변수로 선언되어야 한다.
+46.	한 파일에 존재하는 여러 함수에서만 사용하는 변수가 있다면 그 변수는 그 파일 안에서 정적 변수로 선언되어야 한다.
+47.	여러 소스 파일에서 사용하는 변수들만 전역 변수로 선언한다.
+48.	초기화 목록에서 요소를 생략하여 배열을 0으로 초기화 할 때는 0 이후에 쉼표(,)를 넣어 의도가 명확히 보이도록 한다.
+49.	동적으로 할당한 메모리 주소를 저장하고 있는 포인터 변수를 연산에 사용할 때는 그 포인터의 사본을 만들어 사용한다. 이는 잘못된 메모리 해제를 막기 위함이다.
+50.	내부에서 동적으로 메모리를 할당하는 함수의 이름은 반드시 Malloc으로 끝난다.
+51.	void 형 함수는 실패하지 않는다. 실패 할 수 있는 함수가 어쩔 수 없이 void형 이여야만 하는 함수는 에러를 알려줄 변수를 포인터로 받는다.
+52.	에러를 나타나는 상수는 define으로 헤더파일에 정의하여 사용하며 ERROR_*기능이름* 으로 시작한다.
+53.	열거형 상수는 언제나 열거형 이름으로 시작하여야 한다.
+54. inline 함수는 헤더 파일에 #define으로 구현한다.
 ## 소스 코드 포맷팅
 1. include 전처리문 블록과 코드 본문 사이에 반드시 빈 줄이 있어야 한다.
 2. 탭(tab)은 비주얼 스튜디오 기본값을 사용하며, 비주얼 스튜디오를 사용하지 않을 시 띄어쓰기 4칸을 탭으로 사용한다.
