@@ -195,5 +195,4 @@
 1. Visual C++: 프로젝트 설정을 변경하려면 항상 속성 시트(property sheets)에서 변경 한다.
 2. 프로젝트 설정에서 컴파일 경고를 비활성화 하지 않는다. 그 대신, 코드에서 #pragma 를 사용한다. ( #pragma warning (disable : error_or_warning_code) )
 3. 프로젝트 내부에서 사용되는 실행 파일과 라이브러리 파일의 출력 위치를 통일한다.(property sheet 작성)
-4. 프로젝트 설정은 master와 2인 이상이 동시에 작업하는 repository에 commit 및 push할 때는 무시한다.
-    > vcxproj파일들 제외하고 commit
+
