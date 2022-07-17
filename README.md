@@ -22,12 +22,12 @@ KGU 2022 Summer CS C-With Project
 
 # Roles
 ## H(현석)
-git repo, 개발 프로세스 관리, 라이브러리 개발
+git repo, 개발 프로세스 관리, 라이브러리 개발, OpenCL, GLSL 코드작성, x86_64 어셈블리
 ## D(다현)
 모델링, file io 관련 기능
 ## T(태윤)
-그래프 알고리즘, 오브젝트 탐색, 트리 빌드, etc
+NULL
 ## J(재민)
 git repo 관리, opengl 그래픽스
 ## M(민재)
-OpenGL 그래픽스 렌더링 파이프라인, draw call 최적화
+OpenGL 그래픽스 렌더링 파이프라인, draw call 최적화, 라이브러리 개발, GLSL 코드 작성, x86 어셈블리
