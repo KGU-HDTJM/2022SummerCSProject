@@ -15,12 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="StackAlloc.c">
+    <ClCompile Include="LinearAlgebra.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\header\StackAlloc.h">
+    <ClInclude Include="..\header\LinearAlgebra.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

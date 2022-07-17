@@ -1,6 +1,4 @@
 #include <stdlib.h>
-
-#include "framework.h"
 #include "StackAlloc.h"
 
 unsigned int __cdecl GetAlignedSize_x86(unsigned int size)
