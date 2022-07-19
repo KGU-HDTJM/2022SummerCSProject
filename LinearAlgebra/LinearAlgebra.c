@@ -1,4 +1,6 @@
 #include <math.h>
+
+#define LINEAR_ALGEBRA_EXPORTS
 #include "LinearAlgebra.h"
 
 Vector3f_t __cdecl Cross3f(const Vector3f_t* a, const Vector3f_t* b)
