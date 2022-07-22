@@ -262,6 +262,3 @@ extern LINEAR_ALGEBRA_API Matrix3_t __cdecl MulMatrix3(const Matrix3_t* mA, cons
 extern LINEAR_ALGEBRA_API Matrix4_t __cdecl MulMatrix4(const Matrix4_t* mA, const Matrix4_t* mB);
 extern LINEAR_ALGEBRA_API void __cdecl MulVectorMatrix3(Vector3f_t* out, const Vector3f_t* arr, unsigned long long length, const Matrix3_t* m);
 extern LINEAR_ALGEBRA_API void __cdecl MulVectorMatrix4(Vector4f_t* out, const Vector4f_t* arr, unsigned long long length, const Matrix4_t* m);
-//extern LINEAR_ALGEBRA_API void __cdecl Sums3(Vector3f_t* outArr, unsigned int length, const Vector3f_t* source);
-//extern LINEAR_ALGEBRA_API void __cdecl Subs3(Vector3f_t* outArr, unsigned int length, const Vector3f_t* source);
-
