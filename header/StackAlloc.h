@@ -1,27 +1,14 @@
 #pragma once
 #include <stdbool.h>
 
+#include "HDTJMType.h"
+#include "HDTJMDef.h"
+
 #if defined STACK_ALLOCATION_EXPORTS
 #define STACK_API __declspec(dllexport)
 #else
 #define STACK_API __declspec(dllimport)
 #endif
-
-#if defined (_WIN64)
-// x86_64
-typedef long long Word_t;
-#define GetAlignedSize(size) ((size + 7) & ~7)
-#else
-// x86
-typedef int Word_t;
-#define GetAlignedSize(size) ((size + 3) & ~3)
-#endif
-
-typedef struct _STACK
-{
-	char* SP,* BP;
-	void* memBlock;
-}Stack_t, * pStack_t;
 
 extern STACK_API pStack_t __cdecl CreateStack(size_t size);
 extern STACK_API void __cdecl ReleaseStack(pStack_t stack);
