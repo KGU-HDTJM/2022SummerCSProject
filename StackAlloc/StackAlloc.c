@@ -3,16 +3,6 @@
 #define STACK_ALLOCATION_EXPORTS
 #include "StackAlloc.h"
 
-unsigned int __cdecl GetAlignedSize_x86(unsigned int size)
-{
-	return size & 0xfffffffc + 4U * !!(size & 3U);
-}
-
-unsigned long long __cdecl GetAlignedSize_x64(unsigned long long size)
-{
-	return size & 0xfffffffffffffff8ULL + 8ULL * !!(size & 7ULL);
-}
-
 pStack_t __cdecl CreateStack(size_t size)
 {
 	pStack_t stack = malloc(sizeof(Stack_t));

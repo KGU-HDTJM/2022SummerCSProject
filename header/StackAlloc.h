@@ -10,11 +10,11 @@
 #if defined (_WIN64)
 // x86_64
 typedef long long Word_t;
-#define GetAlignedSize GetAlignedSize_x64
+#define GetAlignedSize(size) ((size + 7) & ~7)
 #else
 // x86
 typedef int Word_t;
-#define GetAlignedSize GetAlignedSize_x86
+#define GetAlignedSize(size) ((size + 3) & ~3)
 #endif
 
 typedef struct _STACK
@@ -22,9 +22,6 @@ typedef struct _STACK
 	char* SP,* BP;
 	void* memBlock;
 }Stack_t, * pStack_t;
-
-extern STACK_API unsigned int __cdecl GetAlignedSize_x86(unsigned int size);
-extern STACK_API unsigned long long __cdecl GetAlignedSize_x64(unsigned long long size);
 
 extern STACK_API pStack_t __cdecl CreateStack(size_t size);
 extern STACK_API void __cdecl ReleaseStack(pStack_t stack);
