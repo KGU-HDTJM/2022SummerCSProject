@@ -1,16 +1,85 @@
+#define STB_IMAGE_IMPLEMENTATION
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <GL/freeglut.h>
 #include <stdio.h>
 #include <math.h>
-#include "Object.h"
+#include <stb_image.h>
+#include "../header/LinearAlgebra.h"
 
-#define W_H 500
-#define W_W 500
+#define W_H 100
+#define W_W 100
 int bim = 1;
 
-Object obj1;
+typedef struct
+{
+	Vector3f_t Vertex[8];
+	int TextureId;
+}Voxel_t;
+
+//Object obj1;
 GLfloat R = 0.7;
 GLfloat camx = 0.5, camy = 0.5, camz = 0.5;
 GLfloat hrzndegree = 0, vrtcldegree = 0;
+void DrawVoxel(void)
+{
+	Vector3f_t vertex[8] = {
+		{-1.0f,-1.0f,1.0f},
+		{-1.0f,1.0f,1.0f},
+		{1.0f,1.0f,1.0f},
+		{1.0f,-1.0f,1.0f},
+		{-1.0f,-1.0f,-1.0f},
+		{-1.0f,1.0f,-1.0f},
+		{1.0f,1.0f,-1.0f},
+		{1.0f,-1.0f,-1.0f}
+	};
+
+	Vector2f_t texCoords[] = {
+		0.0 , 1.0,
+		0.0 , 0.0,
+		1.0 , 0.0,
+		1.0 , 1.0,
+		
+		0.0 , 0.0,
+		1.0 , 0.0,
+		1.0 , 1.0,
+		
+		0.0 , 1.0
+	
+		
+		
+
+	};
+
+	GLint Face[24] = {
+		0,3,2,1,
+		3,7,6,2,
+		0,4,7,3,
+		1,2,6,5,
+		4,5,6,7,
+		0,1,5,4
+	};
+	
+	glVertexPointer(3, GL_FLOAT, 0, vertex);
+	glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
+	for (GLint i = 0; i < 6; i++) {
+		
+		glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_INT, &Face[4 * i]);
+	}
+
+
+}
+void init_texture(unsigned char * data,int width,int height) {
+	GLuint tex_id = 1;
+	glGenTextures(1,&tex_id);
+	glBindTexture(GL_TEXTURE_2D,tex_id);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	
+	glEnable(GL_TEXTURE_2D);
+
+}
 void Display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -21,7 +90,9 @@ void Display(void)
 	camx = pow(R * R + camy * camy, (double)0.5) * cos(hrzndegree);
 	camz = pow(R * R + camy * camy, (double)0.5) * sin(hrzndegree);
 	gluLookAt(camx, camy, camz, 0, 0, 0, 0, 1, 0);
-	DrawObject(obj1);
+	
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	DrawVoxel();
 	glFlush();
 }
 void Reshape(int width, int height)
@@ -65,7 +136,7 @@ void init_light(void)
 
 	glDisable(GL_COLOR_MATERIAL);
 	GLfloat matrial_0_ambient[] = { 0.3,0.3,0.3,1.0};
-	GLfloat matrial_0_diffuse[] = {0.8,0.0,0.3,1.0}; // 물체의 색상을 가장 직접적으로 결정
+	GLfloat matrial_0_diffuse[] = {1,1,1,1.0}; // 물체의 색상을 가장 직접적으로 결정
 	GLfloat matrial_0_specular[] = {1.0 , 1.0 ,1.0 ,1.0};
 	GLfloat matrial_0_shininess[] = {25.0};
 	glMaterialfv(GL_FRONT,GL_AMBIENT, matrial_0_ambient);
@@ -111,8 +182,8 @@ void keyboard(unsigned char key, int x, int y)
 
 int main(int argc, char** argv)
 {
-	obj1 = ReadObject("../resource/chr_knight.obj");
-	int n = 0;
+	int imgWidth, imgHeight,imgCh;
+	unsigned char* image = stbi_load("gray-rock.jpg",&imgWidth,&imgHeight,&imgCh,0);
 	
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_SINGLE);
@@ -120,10 +191,11 @@ int main(int argc, char** argv)
 	glutInitWindowPosition(300, 200);
 	glClearColor(0.0, 0.0, 0.0, 0.0);//rgba (a: 투명도)
 
-
 	glutCreateWindow("Lighting");
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	init_light();// window 생성후 빛 초기화
-
+	init_texture(image, imgWidth, imgHeight);
 	glutDisplayFunc(Display);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(keyboard);
