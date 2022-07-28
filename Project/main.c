@@ -4,12 +4,13 @@
 #include <GL/freeglut.h>
 #include <stdio.h>
 #include <math.h>
-#include <stb_image.h>
-#include "../header/LinearAlgebra.h"
+#include "stb_image.h"
+#include "LinearAlgebra.h"
 
-#define W_H 100
-#define W_W 100
+#define W_H 500
+#define W_W 500
 int bim = 1;
+int View = 1;
 
 typedef struct
 {
@@ -39,16 +40,6 @@ void DrawVoxel(void)
 		0.0 , 0.0,
 		1.0 , 0.0,
 		1.0 , 1.0,
-		
-		0.0 , 0.0,
-		1.0 , 0.0,
-		1.0 , 1.0,
-		
-		0.0 , 1.0
-	
-		
-		
-
 	};
 
 	GLint Face[24] = {
@@ -62,14 +53,13 @@ void DrawVoxel(void)
 	
 	glVertexPointer(3, GL_FLOAT, 0, vertex);
 	glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
-	for (GLint i = 0; i < 6; i++) {
-		
-		glDrawElements(GL_POLYGON, 4, GL_UNSIGNED_INT, &Face[4 * i]);
-	}
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT,Face);
+
 
 
 }
-void init_texture(unsigned char * data,int width,int height) {
+void InitTexture(unsigned char * data,int width,int height) 
+{
 	GLuint tex_id = 1;
 	glGenTextures(1,&tex_id);
 	glBindTexture(GL_TEXTURE_2D,tex_id);
@@ -173,6 +163,7 @@ void keyboard(unsigned char key, int x, int y)
 		bim = !bim;
 		printf("%d",bim);
 		break;
+
 	}
 
 
@@ -183,7 +174,7 @@ void keyboard(unsigned char key, int x, int y)
 int main(int argc, char** argv)
 {
 	int imgWidth, imgHeight,imgCh;
-	unsigned char* image = stbi_load("gray-rock.jpg",&imgWidth,&imgHeight,&imgCh,0);
+	unsigned char* image = stbi_load("pngtest.png",&imgWidth,&imgHeight,&imgCh,0);
 	
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_SINGLE);
@@ -195,7 +186,7 @@ int main(int argc, char** argv)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	init_light();// window 생성후 빛 초기화
-	init_texture(image, imgWidth, imgHeight);
+	InitTexture(image, imgWidth, imgHeight);
 	glutDisplayFunc(Display);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(keyboard);
