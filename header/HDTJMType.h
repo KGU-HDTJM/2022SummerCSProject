@@ -1,15 +1,18 @@
 #pragma once
-// #include <stdbool.h>
 
+// defualt
 typedef unsigned char byte_t;
 typedef unsigned short ushort_t;
 typedef unsigned int uint_t;
 typedef unsigned long long ull_t;
-#ifdef _STDBOOL
-typedef bool boolean_t;
-#else
 typedef enum { False, True } boolean_t;
-#endif
+
+// Voxel Data
+typedef struct
+{
+	Vector4f_t Vertex[8];	
+	int TextureId;
+}Voxel_t;
 
 // StackAlloc.h
 #ifdef _WIN64
