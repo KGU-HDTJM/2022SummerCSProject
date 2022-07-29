@@ -1,5 +1,6 @@
 #include <math.h>
 
+#include "HDTJMDef.h"
 #define LINEAR_ALGEBRA_EXPORTS
 #include "LinearAlgebra.h"
 

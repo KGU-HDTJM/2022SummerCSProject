@@ -18,6 +18,7 @@
 #define EqualFloat(a, b) (fabs((a) - (b)) < EPSILON_F)
 #define Min(a, b) ((a) < (b) ? (a) : (b))
 #define Max(a, b) ((a) < (b) ? (b) : (a))
+#define TO_RAD(x) ((x) * 0.01744444)
 
 typedef Vector2f_t Point;
 
@@ -45,14 +46,49 @@ const Line SQUARE_RANGE[4] = {
 
 int bWire = 1;
 
-float TriPosX;
-float TriPosY;
+float TriPosX = 0.F;
+float TriPosY = 0.F;
 float Size = 0.5;
+int Angle = 5;
 //Object obj1;
+Vector3f_t Vertex[3];
+static Matrix3_t RotationMatrix;
+
+
+Matrix3_t GetRotateMatrix(int zAngle, int yAngle, int xAngle)
+{
+	Matrix3_t m0, m1;
+	double rad;
+	float sine, cosine;
+
+	rad = TO_RAD(zAngle);
+	sine = (float)sin(rad); cosine = (float)cos(rad);
+	m0._11 = cosine;	m0._12 = -sine;		m0._13 = 0;
+	m0._21 = sine;		m0._22 = cosine;	m0._23 = 0;
+	m0._31 = 0;			m0._32 = 0;			m0._33 = 1.F;
+
+	rad = TO_RAD(yAngle);
+	sine = (float)sin(rad); cosine = (float)cos(rad);
+	m1._11 = cosine;	m1._12 = 0;			m1._13 = sine;
+	m1._21 = 0;			m1._22 = 1.F;		m1._23 = 0;
+	m1._31 = -sine;		m1._32 = 0;			m1._33 = cosine;
+
+	m0 = MulMatrix3(&m0, &m1);
+
+	rad = TO_RAD(xAngle);
+	sine = (float)sin(rad); cosine = (float)cos(rad);
+	m1._11 = 1.F;		m1._12 = 0;			m1._13 = 0;
+	m1._21 = 0;			m1._22 = cosine;	m1._23 = -sine;
+	m1._31 = 0;			m1._32 = sine;		m1._33 = cosine;
+
+	m0 = MulMatrix3(&m0, &m1);
+
+	return m0;
+}
 
 void DrawSq(void)
 {
-	Vector3f_t vertex[4] =
+	static Vector3f_t vertex[4] =
 	{
 		{ RIGHT,	TOP,	1.0F},
 		{ RIGHT,	BOTTOM, 1.0F},
@@ -155,7 +191,6 @@ boolean_t LineIntersection(Line* l1, Line* l2) {
 	{
 		if (Comparator(&l1->P2, &l1->P1)) { Swap(&l1->P1, &l1->P2); }
 		if (Comparator(&l2->P2, &l2->P1)) { Swap(&l2->P1, &l2->P2); }
-
 		bIsIntersected = Comparator(&l2->P1, &l1->P2) && Comparator(&l1->P1, &l2->P2);
 	}
 	else { bIsIntersected = (l1_l2 <= 0) && (l2_l1 <= 0); }
@@ -166,7 +201,7 @@ void ReviseVertex(Vector3f_t* vertex)
 {
 	for (int i = 0; i < 3; i++)
 	{
-		Line triSide = 
+		Line triSide =
 		{
 			{ vertex[i].V[0],				vertex[i].V[1]			 },
 			{ vertex[(i + 1) % 3].V[0],		vertex[(i + 1) % 3].V[1] }
@@ -191,20 +226,25 @@ void ReviseVertex(Vector3f_t* vertex)
 	}
 }
 
-void DrawTri(float x, float y, float Size, float angle)
+// 함수의 기능을 좀더 작개 분리할 필요가있음, 차리리 3각형 vertex를 받아서 그걸로 3각형 그리는게 낫지 이런식으로 만들어서 그리는거 하지마
+
+void DrawTri(float x, float y)
 {
 	// 기본적으로 컴마(,)로 구분되는 값은 띄어쓰기로 띄어줘
-	float vertex[3][3] = {
+	/*Vector3f_t Vertex[3] = {
 		{ 0.0F * Size + x,	1.0F * Size + y,	1.0F },
 		{ 0.0F * Size + x,	-1.0F * Size + y,	1.0F },
 		{ 1.0F * Size + x,	0.0F * Size + y,	1.0F },
-	};
+	};*/
 
 	GLint Face[3] = { 0,1,2 };
-	glVertexPointer(3, GL_FLOAT, 0, vertex);
-	ReviseVertex(vertex);
-	glRotatef(angle, 0.0, 0.0, 1.0);
+	glVertexPointer(3, GL_FLOAT, 0, Vertex);
+	ReviseVertex(Vertex);
+	glRotatef(0, 0.0, 0.0, 1.0);
 
+	// 채움 공간은 삼각형만 하면 되는거니까 PolygonMode설정은 삼각형에서만
+	if (bWire) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
+	else { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 
 	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, Face);
 }
@@ -216,15 +256,19 @@ void Display(void)
 	glLoadIdentity();
 
 	gluLookAt(0, 0, 1, 0.0, 0.0, 0.0, 0, 1, 0);
-	if (bWire)glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glPushMatrix();
 
 	DrawSq();
 	glPopMatrix();
 	glPushMatrix();
-	DrawTri(TriPosX, TriPosY, Size, 0);
+	DrawTri(TriPosX, TriPosY);
 	glPopMatrix();
 	glFlush();
+	for (size_t i = 0; i < 3; i++)
+	{
+		printf("%llu: %f %f %f\n", i, Vertex[i].X, Vertex[i].Y, Vertex[i].Z);
+	}
 }
 
 void Reshape(int width, int height)
@@ -241,7 +285,12 @@ void Reshape(int width, int height)
 
 void keyboard(unsigned char key, int x, int y)
 {
+	static Matrix3_t temp;
 	// 이렇게 하면 대소문자 둘다 커버 가능
+	for (size_t i = 0; i < 3; i++)
+	{
+		Vertex[i] = Sub3f(Vertex[i], GetVector3f(TriPosX, TriPosY, 0.F));
+	}
 	switch (key | 0x20)
 	{
 	case 'w':
@@ -258,144 +307,42 @@ void keyboard(unsigned char key, int x, int y)
 		break;
 	case 'e':
 		bWire = !bWire;
+		break;
+	case 'r':
+		temp = GetRotateMatrix(Angle, 0, 0);
+		RotationMatrix = temp;
+		MulVectorMatrix3(Vertex, Vertex, 3, &RotationMatrix);
+		break;
 	default:
 		break;
 	}
 
-
+	for (size_t i = 0; i < 3; i++)
+	{
+		Vertex[i] = Sum3f(Vertex[i], GetVector3f(TriPosX, TriPosY, 0.F));
+	}
 	glutPostRedisplay();
 }
 
 int main(int argc, char** argv)
 {
-
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_SINGLE);
-	glutInitWindowSize(1000, 1000);
-	glutInitWindowPosition(300, 200);
-	glClearColor(0.0, 0.0, 0.0, 0.0);//rgba (a: 투명도)
-
-	glutCreateWindow("Lighting");
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glutDisplayFunc(Display);
-	glutReshapeFunc(Reshape);
-	glutKeyboardFunc(keyboard);
-	glutMainLoop();
-
-	return 0;
-
-}
-/*
-void ReviseVertex(float vertex[3][3])
-{
-	for (int i = 0; i < 3; i++)
+	Vertex[0] = GetVector3f(0.0F, 1.0F, 1.0F);
+	Vertex[1] = GetVector3f(0.0F, -1.0F, 1.0F);
+	Vertex[2] = GetVector3f(1.0F, 0.0F, 1.0F);
+	for (size_t i = 0; i < 3; i++)
 	{
-		Line triSide = {
-			{vertex[i][0],vertex[i][1]},
-			{vertex[(i + 1) % 3][0],vertex[(i + 1) % 3][1]}
-		};
-		//printf("%.1f %.1f\n", triSide.p1.x, triSide.p1.y);
-		for (int j = 0; j < 4; j++)
+		Vertex[i] = MulScalar3f(Size, Vertex[i]);
+		for (size_t j = 0; j < 3; j++)
 		{
-			Line sqrSide = square_s[j];
-			float d = (triSide.p1.x - triSide.p2.x) * (sqrSide.p1.y - sqrSide.p2.y)
-				- (triSide.p1.y - triSide.p2.y) * (sqrSide.p1.x - sqrSide.p2.x);
-			if (IsIntersected(triSide, sqrSide) && d != 0.0f)
-			{
-				Point point = {
-					((triSide.p1.x * triSide.p2.y - triSide.p1.y * triSide.p2.x) * (sqrSide.p1.x - sqrSide.p2.x)
-					- (triSide.p1.x - triSide.p2.x) * (sqrSide.p1.x * sqrSide.p2.y - sqrSide.p1.y * sqrSide.p2.x)) / d,
-					((triSide.p1.x * triSide.p2.y - triSide.p1.y * triSide.p2.x) * (sqrSide.p1.y - sqrSide.p2.y)
-					- (triSide.p1.y - triSide.p2.y) * (sqrSide.p1.x * sqrSide.p2.y - sqrSide.p1.y * sqrSide.p2.x)) / d
-				};
-
-				printf("%.1f %.1f\n", point.x, point.y);
-			}
+			RotationMatrix.M[i][j] = (float)(i == j);
 		}
 	}
-}
-void DrawTri(float x, float y, float size, float angle)
-{
-	float vertex[3][3] = {
-		{0.0f * size + x,1.0f * size + y,1.0f},
-		{0.0f * size + x,-1.0f * size + y,1.0f},
-		{1.0f * size + x,0.0f * size + y,1.0f},
-	};
-
-	GLint Face[3] = { 0,1,2 };
-	glVertexPointer(3, GL_FLOAT, 0, vertex);
-	ReviseVertex(vertex);
-	glRotatef(angle, 0.0, 0.0, 1.0);
-
-
-	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, Face);
-}
-
-void Display(void)
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	gluLookAt(0, 0, 1, 0.0, 0.0, 0.0, 0, 1, 0);
-	if (wire)glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glPushMatrix();
-
-	DrawSq();
-	glPopMatrix();
-	glPushMatrix();
-	DrawTri(tirPosx, tirPosy, size, 0);
-	glPopMatrix();
-	glFlush();
-}
-void Reshape(int width, int height)
-{
-	glViewport(0, 0, width, height);
-	GLfloat factor_w = (GLfloat)width / (GLfloat)W_W;
-	GLfloat factor_h = (GLfloat)height / (GLfloat)W_H;
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(-1 * factor_w, 1 * factor_w, -1 * factor_h, 1 * factor_h, -10, 10);
-
-}
-
-void keyboard(unsigned char key, int x, int y)
-{
-	switch (key)
-	{
-	case 'w':
-		tirPosy += 0.1;
-		break;
-	case 'a':
-		tirPosx -= 0.1;
-		break;
-	case 's':
-		tirPosy -= 0.1;
-		break;
-	case 'd':
-		tirPosx += 0.1;
-		break;
-
-	default:
-		break;
-	}
-
-
-	glutPostRedisplay();
-}
-
-
-
-
-int main(int argc, char** argv)
-{
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_SINGLE);
 	glutInitWindowSize(1000, 1000);
 	glutInitWindowPosition(300, 200);
-	glClearColor(0.0, 0.0, 0.0, 0.0);//rgba (a: 투명도)
+	glClearColor(0.0, 0.5, 0.0, 0.3);//rgba (a: 투명도)
 
 	glutCreateWindow("Lighting");
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -407,4 +354,3 @@ int main(int argc, char** argv)
 	return 0;
 
 }
-*/
