@@ -26,12 +26,12 @@ void __cdecl ReleaseStack(pStack_t stack)
 	free(stack);
 }
 
-bool __cdecl StackOF(pStack_t stack)
+boolean_t __cdecl StackOF(pStack_t stack)
 {
 	return (Word_t)stack->memBlock < (Word_t)stack->SP;
 }
 
-bool __cdecl StackUF(pStack_t stack)
+boolean_t __cdecl StackUF(pStack_t stack)
 {
 	return (Word_t)stack->BP < (Word_t)stack->SP;
 }
