@@ -7,8 +7,6 @@ typedef unsigned int uint_t;
 typedef unsigned long long ull_t;
 typedef enum { False, True } boolean_t;
 
-
-
 // StackAlloc.h
 #ifdef _WIN64
 // x86_64
@@ -108,6 +106,25 @@ typedef struct
 		};
 	};
 } Vector4f_t;
+
+typedef struct
+{
+	union
+	{
+		struct
+		{
+			float _11;
+			float _12;
+
+			float _21;
+			float _22;
+		};
+		struct
+		{
+			float M[2][2];
+		};
+	};
+} Matrix2_t;
 
 typedef struct
 {

@@ -18,6 +18,17 @@
 #define GetVector4f(x, y, z, w) ( (Vector4f_t){ (float)(x), (float)(y), (float)(z), (float)(w) } )
 
 // Get Matrix by scalar
+#define GetMatrix2\
+(\
+	_11, _12,\
+	_21, _22\
+)\
+( (Matrix2_t) \
+{\
+	(_11), (_12),\
+	(_21), (_22)\
+} )
+
 #define GetMatrix3\
 (\
 	_11, _12, _13,\
@@ -48,6 +59,7 @@
 
 // Simple calculations
 // Vector4f_t ȣȯ
+
 #define Dot3f(v3A, v3B) ( (float)\
 (\
 	(v3B).X * (v3B).X + (v3A).Y * (v3B).Y + (v3A).Z * (v3B).Z\
@@ -99,6 +111,13 @@
 })
 
 // Matrix4_t ȣȯ��
+
+#define Det2(mat2) ( (float)\
+(\
+	((mat2)._11 * (mat2)._22\
+	- (mat2)._21 * (mat2)._12)\
+) )
+
 #define Det3(mat3) ( (float)\
 (\
 	((mat3)._11 * ((mat3)._22 * (mat3)._33 - (mat3)._23 * (mat3)._32))\
