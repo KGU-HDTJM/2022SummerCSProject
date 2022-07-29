@@ -1,7 +1,10 @@
 #pragma once
 #include "HDTJMType.h"
 
-#ifdef _WIN64
+#if !defined(HDTJMDEF_H)
+#define HDTJMDEF_H
+
+#if defined(_WIN64)
 // x86_64
 #define GetAlignedSize(size) ((size + 7) & ~7)
 #else
@@ -114,3 +117,4 @@
 	- ((mat4)._14 * ((mat4)._23 * (mat4)._32 * (mat4)._41 - (mat4)._21 * (mat4)_32 * (mat4)._43))\
 ) )
 
+#endif
