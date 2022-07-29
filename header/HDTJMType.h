@@ -7,12 +7,7 @@ typedef unsigned int uint_t;
 typedef unsigned long long ull_t;
 typedef enum { False, True } boolean_t;
 
-// Voxel Data
-typedef struct
-{
-	Vector4f_t Vertex[8];	
-	int TextureId;
-}Voxel_t;
+
 
 // StackAlloc.h
 #ifdef _WIN64
@@ -171,3 +166,10 @@ typedef struct
 		};
 	};
 } Matrix4_t;
+
+// Voxel Data
+typedef struct
+{
+	Vector4f_t Vertex[8];
+	int TextureId;
+}Voxel_t;
