@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="OpenCL Kernel">
+      <UniqueIdentifier>{874731e6-cb49-4cc6-90f6-996f3fa64c34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.c">
@@ -20,11 +23,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\header\HDTJMDef.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\header\HDTJMType.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <None Include="vector_add.cl">
+      <Filter>OpenCL Kernel</Filter>
+    </None>
   </ItemGroup>
 </Project>
