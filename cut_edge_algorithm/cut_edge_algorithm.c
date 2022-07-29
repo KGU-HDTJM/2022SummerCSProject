@@ -54,43 +54,41 @@ void DrawSq(void)
 	glVertexPointer(3, GL_FLOAT, 0, vertex);
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, Face);
 }
-int CCW(Point p1, Point p2, Point p3)
-{
-	int crossProduct = (p2.x - p1.x) * (p3.y - p1.y) - (p3.x - p1.x) * (p2.y - p1.y);
 
-	return crossProduct == 0 ? 0 : (crossProduct > 0 ? 1 : -1);
+float CrossProduct(Point a, Point b)
+{
+	return a.x * b.y - a.y * b.x;
 }
 
-boolean_t Comparator(Point left, Point right)
+float Direction(Point a, Point b, Point c)
 {
-	if (left.x == right.x)
-		return left.y <= right.y;
+	Point ca = { a.x - c.x, a.y - c.y };
+	Point cb = { b.x - c.x, b.y - c.y };
+	float value;
 
-	return left.x <= right.x;
-}
-void Swap(Point* p1, Point* p2)
-{
-	Point temp;
-	temp = *p1;
-	*p1 = *p2;
-	*p2 = temp;
+	value = CrossProduct(ca, cb);
+	return value == 0 ? 0 : (value > 0 ? 1 : -1);
 }
 
-boolean_t LineIntersection(Line l1, Line l2) {
-	boolean_t bIsIntersected;
-	int l1_l2 = CCW(l1.p1, l1.p2, l2.p1) * CCW(l1.p1, l1.p2, l2.p2);
-	int l2_l1 = CCW(l2.p1, l2.p2, l1.p1) * CCW(l2.p1, l2.p2, l1.p2);
-
-	if (l1_l2 == 0 && l2_l1 == 0)
-	{
-		if (Comparator(l1.p2, l1.p1)) Swap(&l1.p1, &l1.p2);
-		if (Comparator(l2.p2, l2.p1)) Swap(&l2.p1, &l2.p2);
-
-		bIsIntersected = (Comparator(l2.p1, l1.p2)) && (Comparator(l1.p1, l2.p2));
-	}
-	else
-		bIsIntersected = (l1_l2 <= 0) && (l2_l1 <= 0);
-	return bIsIntersected;
+boolean_t OnSegment(Point a, Point b, Point c)
+{
+	if (c.x >= min(a.x, b.x) && c.x <= max(a.x, b.x) && c.y >= min(a.y, b.y) && c.y <= max(a.y, b.y)) 
+		return True;
+	return False;
+}
+boolean_t IsIntersected(Line l1, Line l2) 
+{
+	int d1, d2, d3, d4;
+	d1 = Direction(l2.p1, l2.p2, l1.p1);
+	d2 = Direction(l2.p1, l2.p2, l1.p2);
+	d3 = Direction(l1.p1, l1.p2, l2.p1);
+	d4 = Direction(l1.p1, l1.p2, l2.p2);
+	if (d1 * d2 < 0 && d3 * d4 < 0) return True;
+	else if (d1 == 0 && OnSegment(l2.p1, l2.p2, l1.p1)) return True;
+	else if (d2 == 0 && OnSegment(l2.p1, l2.p2, l1.p2)) return True;
+	else if (d3 == 0 && OnSegment(l1.p1, l1.p2, l2.p1)) return True;
+	else if (d4 == 0 && OnSegment(l1.p1, l1.p2, l2.p2)) return True;
+	return False;
 }
 
 void ReviseVertex(float vertex[3][3])
@@ -107,7 +105,7 @@ void ReviseVertex(float vertex[3][3])
 			Line sqrSide = square_s[j];
 			float d = (triSide.p1.x - triSide.p2.x) * (sqrSide.p1.y - sqrSide.p2.y)
 				- (triSide.p1.y - triSide.p2.y) * (sqrSide.p1.x - sqrSide.p2.x);
-			if (LineIntersection(triSide, sqrSide) && d != 0.0f)
+			if (IsIntersected(triSide, sqrSide) && d != 0.0f)
 			{
 				Point point = {
 					((triSide.p1.x * triSide.p2.y - triSide.p1.y * triSide.p2.x) * (sqrSide.p1.x - sqrSide.p2.x)
