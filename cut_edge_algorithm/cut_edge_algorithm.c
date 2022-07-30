@@ -1,6 +1,7 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
-#include <GL/freeglut.h>
+#include <GL/glut.h>
+#include <GL/GL.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -18,7 +19,7 @@
 #define EqualFloat(a, b) (fabs((a) - (b)) < EPSILON_F)
 #define Min(a, b) ((a) < (b) ? (a) : (b))
 #define Max(a, b) ((a) < (b) ? (b) : (a))
-#define TO_RAD(x) ((x) * 0.01744444)
+#define TO_RAD(x) ((x) * 0.01744444F)
 
 typedef Vector2f_t Point;
 
@@ -53,6 +54,21 @@ int Angle = 1;
 Vector3f_t Vertex[3];
 static Matrix3_t RotationMatrix;
 
+void _MulVectorMatrix3(Vector3f_t* dst, const Vector3f_t* src, size_t length, Matrix3_t* matrix)
+{
+	float x, y, z;
+	for (size_t i = 0; i < length; i++)
+	{
+		x = src[i].X;
+		y = src[i].Y;
+		z = src[i].Z;
+		dst[i].X = matrix->_11 * x + matrix->_12 * y + matrix->_13 * z;
+		dst[i].Y = matrix->_21 * x + matrix->_22 * y + matrix->_23 * z;
+		dst[i].Z = matrix->_31 * x + matrix->_32 * y + matrix->_33 * z;
+	}
+}
+
+
 
 Matrix3_t GetRotateMatrix(int zAngle, int yAngle, int xAngle)
 {
@@ -65,7 +81,7 @@ Matrix3_t GetRotateMatrix(int zAngle, int yAngle, int xAngle)
 	m0._11 = cosine;	m0._12 = -sine;		m0._13 = 0;
 	m0._21 = sine;		m0._22 = cosine;	m0._23 = 0;
 	m0._31 = 0;			m0._32 = 0;			m0._33 = 1.F;
-
+	
 	rad = TO_RAD(yAngle);
 	sine = (float)sin(rad); cosine = (float)cos(rad);
 	m1._11 = cosine;	m1._12 = 0;			m1._13 = sine;
@@ -80,7 +96,7 @@ Matrix3_t GetRotateMatrix(int zAngle, int yAngle, int xAngle)
 	m1._21 = 0;			m1._22 = cosine;	m1._23 = -sine;
 	m1._31 = 0;			m1._32 = sine;		m1._33 = cosine;
 
-	m0 = MulMatrix3(&m0, &m1);
+	 m0 = MulMatrix3(&m0, &m1);
 
 	return m0;
 }
@@ -97,14 +113,21 @@ void PivotRotate(int zAngle)
 	posGx = (Vertex[0].X+ Vertex[1].X+ Vertex[2].X) /3;
 	posGy = (Vertex[0].Y + Vertex[1].Y + Vertex[2].Y) /3;
 
-	Vertex[0].X -= posGx; Vertex[1].X -= posGx; Vertex[2].X -= posGx;
-	Vertex[0].Y -= posGy; Vertex[1].Y -= posGy; Vertex[2].Y -= posGy;
+	//Vertex[0].X -= posGx; Vertex[1].X -= posGx; Vertex[2].X -= posGx;
+	//Vertex[0].Y -= posGy; Vertex[1].Y -= posGy; Vertex[2].Y -= posGy;
 
-	rad = TO_RAD(zAngle);
+	/*rad = TO_RAD(zAngle);
 	sine = (float)sin(rad); cosine = (float)cos(rad);
 	m0._11 = cosine;	m0._12 = -sine;		m0._13 = posGx;
 	m0._21 = sine;		m0._22 = cosine;	m0._23 = posGy;
+	m0._31 = 0;			m0._32 = 0;			m0._33 = 1.F;*/
+
+	/*
+	* m0._11 = cosine;	m0._12 = -sine;		m0._13 = 0;
+	m0._21 = sine;		m0._22 = cosine;	m0._23 = 0;
 	m0._31 = 0;			m0._32 = 0;			m0._33 = 1.F;
+	*/
+	m0 = GetRotateMatrix(zAngle, 0, 0);
 
 	for (int i = 0; i < 3; i++) 
 	{
@@ -344,10 +367,9 @@ void keyboard(unsigned char key, int x, int y)
 		bWire = !bWire;
 		break;
 	case 'e':
-		/*
-		temp = GetRotateMatrix(Angle, 0, 0);
+		/*temp = GetRotateMatrix(Angle, 0, 0);
 		RotationMatrix = temp;
-		MulVectorMatrix3(Vertex, Vertex, 3, &RotationMatrix);
+		_MulVectorMatrix3(Vertex, Vertex, 3, &RotationMatrix);
 		*/
 		PivotRotate(-Angle);
 		break;
