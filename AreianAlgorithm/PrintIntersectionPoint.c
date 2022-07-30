@@ -48,7 +48,7 @@ int bWire = 1;
 
 float TriPosX = 0.F;
 float TriPosY = 0.F;
-float Size = 0.5;
+float Size = 0.5F;
 int Angle = 1;
 Vector3f_t Vertex[3];
 static Matrix3_t RotationMatrix;
@@ -180,51 +180,12 @@ boolean_t IsIntersected(Line* l1, Line* l2)
 
 	d3 = Direction(&l1->P1, &l1->P2, &l2->P1);
 	d4 = Direction(&l1->P1, &l1->P2, &l2->P2);
-	if (d1 * d2 < 0 && d3 * d4 < 0) { return True; }
 
-	if (d1 == 0 && OnSegment(&l2->P1, &l2->P2, &l1->P1)) { return True; }
-	if (d2 == 0 && OnSegment(&l2->P1, &l2->P2, &l1->P2)) { return True; }
-	if (d3 == 0 && OnSegment(&l1->P1, &l1->P2, &l2->P1)) { return True; }
-	if (d4 == 0 && OnSegment(&l1->P1, &l1->P2, &l2->P2)) { return True; }
-	return False;
-
-}
-
-boolean_t Comparator(Point* left, Point* right)
-{
-	// 코드 한줄을 적더라도 중괄호 열기
-	// floating number의 비교는 == 쓰면 상수값끼리의 비교가 아닌이상 정확하지 않음 오차를 생각하여\
-	// 대소관계를 사용하거나 epsilon delta 비교를 해야함
-	/*
-	if (left->X == right->X) { return left->Y <= right->Y; }
-	return left->X <= right->X;
-	*/
-	if (EqualFloat(left->X, right->X)) { return left->Y <= right->Y; }
-	return left->X <= right->X;
-}
-
-// 이런건 매크로 함수로 하는게 좋을꺼 같음 함수호출 비용이 Swap 연산보다 클 가능성이 있음
-void Swap(Point* p1, Point* p2)
-{
-	Point temp;
-	temp = *p1;
-	*p1 = *p2;
-	*p2 = temp;
-}
-
-boolean_t LineIntersection(Line* l1, Line* l2) {
-	boolean_t bIsIntersected;
-	int l1_l2 = OnSegment(&l1->P1, &l1->P2, &l2->P1) * OnSegment(&l1->P1, &l1->P2, &l2->P2);
-	int l2_l1 = OnSegment(&l2->P1, &l2->P2, &l1->P1) * OnSegment(&l2->P1, &l2->P2, &l1->P2);
-
-	if (l1_l2 == 0 && l2_l1 == 0)
-	{
-		if (Comparator(&l1->P2, &l1->P1)) { Swap(&l1->P1, &l1->P2); }
-		if (Comparator(&l2->P2, &l2->P1)) { Swap(&l2->P1, &l2->P2); }
-		bIsIntersected = Comparator(&l2->P1, &l1->P2) && Comparator(&l1->P1, &l2->P2);
-	}
-	else { bIsIntersected = (l1_l2 <= 0) && (l2_l1 <= 0); }
-	return bIsIntersected;
+	return (d1 * d2 <= 0 && d3 * d4 <= 0)
+		|| (d1 == 0 && OnSegment(&l2->P1, &l2->P2, &l1->P1))
+		|| (d2 == 0 && OnSegment(&l2->P1, &l2->P2, &l1->P2))
+		|| (d3 == 0 && OnSegment(&l1->P1, &l1->P2, &l2->P1))
+		|| (d4 == 0 && OnSegment(&l1->P1, &l1->P2, &l2->P2));
 }
 
 void ReviseVertex(Vector3f_t* vertex)
@@ -254,6 +215,7 @@ void ReviseVertex(Vector3f_t* vertex)
 			}
 		}
 	}
+	printf("\n");
 }
 
 // 함수의 기능을 좀더 작개 분리할 필요가있음, 차리리 3각형 vertex를 받아서 그걸로 3각형 그리는게 낫지 이런식으로 만들어서 그리는거 하지마
@@ -261,11 +223,10 @@ void ReviseVertex(Vector3f_t* vertex)
 void DrawTri(float x, float y)
 {
 	// 기본적으로 컴마(,)로 구분되는 값은 띄어쓰기로 띄어줘
-	/*Vector3f_t Vertex[3] = {
-		{ 0.0F * Size + x,	1.0F * Size + y,	1.0F },
-		{ 0.0F * Size + x,	-1.0F * Size + y,	1.0F },
-		{ 1.0F * Size + x,	0.0F * Size + y,	1.0F },
-	};*/
+	for (size_t i = 0; i < 3; i++)
+	{
+		Vertex[i] = Sum3f(Vertex[i], GetVector3f(x, y, 0.F));
+	}
 
 	GLint Face[3] = { 0,1,2 };
 	glVertexPointer(3, GL_FLOAT, 0, Vertex);
@@ -278,6 +239,24 @@ void DrawTri(float x, float y)
 	else { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 
 	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, Face);
+}
+
+void DrawDot(Vector3f_t* vertex, float size) {
+	float posGx = (vertex[0].X + vertex[1].X + vertex[2].X) / 3;
+	float posGy = (vertex[0].Y + vertex[1].Y + vertex[2].Y) / 3;
+
+	Vector3f_t dotvertex[4] =
+	{
+		{ posGx + 1.F * size,    posGy + 1.F * size,    1.0F},
+		{ posGx + 1.F * size,    posGy - 1.F * size,    1.0F},
+		{ posGx - 1.F * size,    posGy - 1.F * size,    1.0F},
+		{ posGx - 1.F * size,    posGy + 1.F * size,    1.0F}
+	};
+
+	GLint Face[4] = { 0,1,2,3 };
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glVertexPointer(3, GL_FLOAT, 0, dotvertex);
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, Face);
 }
 
 void Display(void)
@@ -295,6 +274,10 @@ void Display(void)
 	glPushMatrix();
 
 	DrawTri(TriPosX, TriPosY);
+	glPopMatrix();
+	glPushMatrix();
+
+	DrawDot(Vertex, 0.01);
 	glPopMatrix();
 	glFlush();
 
@@ -322,48 +305,42 @@ void keyboard(unsigned char key, int x, int y)
 {
 	static Matrix3_t temp;
 	// 이렇게 하면 대소문자 둘다 커버 가능
-	for (size_t i = 0; i < 3; i++)
-	{
-		Vertex[i] = Sub3f(Vertex[i], GetVector3f(TriPosX, TriPosY, 0.F));
-	}
 	switch (key | 0x20)
 	{
 	case 'w':
-		TriPosY += 0.1;
+		TriPosX = 0.F;
+		TriPosY = 0.1F;
 		break;
 	case 'a':
-		TriPosX -= 0.1;
+		TriPosX = -0.1F;
+		TriPosY = 0.F;
 		break;
 	case 's':
-		TriPosY -= 0.1;
+		TriPosX = 0.F;
+		TriPosY = -0.1F;
 		break;
 	case 'd':
-		TriPosX += 0.1;
+		TriPosX = 0.1F;
+		TriPosY = 0.F;
 		break;
 	case 'r':
 		bWire = !bWire;
 		break;
 	case 'e':
-		/*
-		temp = GetRotateMatrix(Angle, 0, 0);
-		RotationMatrix = temp;
-		MulVectorMatrix3(Vertex, Vertex, 3, &RotationMatrix);
-		*/
-		PivotRotate(-Angle);
+		TriPosX = TriPosY = 0.F;
+		PivotRotate(-Angle, Vertex, 3);
 		break;
 	case 'q':
-		PivotRotate(Angle);
+		TriPosX = TriPosY = 0.F;
+		PivotRotate(Angle, Vertex, 3);
 		break;
 	default:
 		break;
 	}
-
-	for (size_t i = 0; i < 3; i++)
-	{
-		Vertex[i] = Sum3f(Vertex[i], GetVector3f(TriPosX, TriPosY, 0.F));
-	}
 	glutPostRedisplay();
 }
+
+
 
 int main(int argc, char** argv)
 {
