@@ -241,6 +241,24 @@ void DrawTri(float x, float y)
 	glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, Face);
 }
 
+void DrawDot(Vector3f_t* vertex, float size) {
+	float posGx = (vertex[0].X + vertex[1].X + vertex[2].X) / 3;
+	float posGy = (vertex[0].Y + vertex[1].Y + vertex[2].Y) / 3;
+
+	Vector3f_t dotvertex[4] =
+	{
+		{ posGx + 1.F * size,    posGy + 1.F * size,    1.0F},
+		{ posGx + 1.F * size,    posGy - 1.F * size,    1.0F},
+		{ posGx - 1.F * size,    posGy - 1.F * size,    1.0F},
+		{ posGx - 1.F * size,    posGy + 1.F * size,    1.0F}
+	};
+
+	GLint Face[4] = { 0,1,2,3 };
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glVertexPointer(3, GL_FLOAT, 0, dotvertex);
+	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, Face);
+}
+
 void Display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -256,6 +274,10 @@ void Display(void)
 	glPushMatrix();
 
 	DrawTri(TriPosX, TriPosY);
+	glPopMatrix();
+	glPushMatrix();
+
+	DrawDot(Vertex, 0.01);
 	glPopMatrix();
 	glFlush();
 
@@ -317,6 +339,8 @@ void keyboard(unsigned char key, int x, int y)
 	}
 	glutPostRedisplay();
 }
+
+
 
 int main(int argc, char** argv)
 {
