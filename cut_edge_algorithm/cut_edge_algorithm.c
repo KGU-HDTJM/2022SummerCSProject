@@ -1,6 +1,6 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
-#include <GL/GLUT.h>
+#include <GL/freeglut.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -49,8 +49,7 @@ int bWire = 1;
 float TriPosX = 0.F;
 float TriPosY = 0.F;
 float Size = 0.5;
-int Angle = 5;
-//Object obj1;
+int Angle = 1;
 Vector3f_t Vertex[3];
 static Matrix3_t RotationMatrix;
 
@@ -86,6 +85,37 @@ Matrix3_t GetRotateMatrix(int zAngle, int yAngle, int xAngle)
 	return m0;
 }
 
+
+// 일단 평면으로  가정해서 만듬(,angle) 
+void PivotRotate(int zAngle)
+{
+	Matrix3_t m0;
+	double rad;
+	float sine, cosine;
+	float posGx, posGy;
+	float vx, vy;
+	posGx = (Vertex[0].X+ Vertex[1].X+ Vertex[2].X) /3;
+	posGy = (Vertex[0].Y + Vertex[1].Y + Vertex[2].Y) /3;
+
+	Vertex[0].X -= posGx; Vertex[1].X -= posGx; Vertex[2].X -= posGx;
+	Vertex[0].Y -= posGy; Vertex[1].Y -= posGy; Vertex[2].Y -= posGy;
+
+	rad = TO_RAD(zAngle);
+	sine = (float)sin(rad); cosine = (float)cos(rad);
+	m0._11 = cosine;	m0._12 = -sine;		m0._13 = posGx;
+	m0._21 = sine;		m0._22 = cosine;	m0._23 = posGy;
+	m0._31 = 0;			m0._32 = 0;			m0._33 = 1.F;
+
+	for (int i = 0; i < 3; i++) 
+	{
+		vx = Vertex[i].X;
+		vy = Vertex[i].Y;
+		Vertex[i].X = m0._11 *vx + m0._12*vy + m0._13;
+		Vertex[i].Y = m0._21 *vx + m0._22*vy + m0._23;
+	}
+
+
+}
 void DrawSq(void)
 {
 	static Vector3f_t vertex[4] =
@@ -242,6 +272,7 @@ void DrawTri(float x, float y)
 	ReviseVertex(Vertex);
 	glRotatef(0, 0.0, 0.0, 1.0);
 
+
 	// 채움 공간은 삼각형만 하면 되는거니까 PolygonMode설정은 삼각형에서만
 	if (bWire) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
 	else { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
@@ -262,13 +293,17 @@ void Display(void)
 	DrawSq();
 	glPopMatrix();
 	glPushMatrix();
+	
 	DrawTri(TriPosX, TriPosY);
 	glPopMatrix();
 	glFlush();
+
 	for (size_t i = 0; i < 3; i++)
 	{
 		printf("%llu: %f %f %f\n", i, Vertex[i].X, Vertex[i].Y, Vertex[i].Z);
 	}
+
+	
 }
 
 void Reshape(int width, int height)
@@ -305,13 +340,19 @@ void keyboard(unsigned char key, int x, int y)
 	case 'd':
 		TriPosX += 0.1;
 		break;
-	case 'e':
+	case 'r':
 		bWire = !bWire;
 		break;
-	case 'r':
+	case 'e':
+		/*
 		temp = GetRotateMatrix(Angle, 0, 0);
 		RotationMatrix = temp;
 		MulVectorMatrix3(Vertex, Vertex, 3, &RotationMatrix);
+		*/
+		PivotRotate(-Angle);
+		break;
+	case 'q':
+		PivotRotate(Angle);
 		break;
 	default:
 		break;
