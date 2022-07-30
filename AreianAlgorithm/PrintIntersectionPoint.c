@@ -254,6 +254,7 @@ void ReviseVertex(Vector3f_t* vertex)
 			}
 		}
 	}
+	printf("\n");
 }
 
 // 함수의 기능을 좀더 작개 분리할 필요가있음, 차리리 3각형 vertex를 받아서 그걸로 3각형 그리는게 낫지 이런식으로 만들어서 그리는거 하지마
@@ -261,11 +262,10 @@ void ReviseVertex(Vector3f_t* vertex)
 void DrawTri(float x, float y)
 {
 	// 기본적으로 컴마(,)로 구분되는 값은 띄어쓰기로 띄어줘
-	/*Vector3f_t Vertex[3] = {
-		{ 0.0F * Size + x,	1.0F * Size + y,	1.0F },
-		{ 0.0F * Size + x,	-1.0F * Size + y,	1.0F },
-		{ 1.0F * Size + x,	0.0F * Size + y,	1.0F },
-	};*/
+	for (size_t i = 0; i < 3; i++)
+	{
+		Vertex[i] = Sum3f(Vertex[i], GetVector3f(x, y, 0.F));
+	}
 
 	GLint Face[3] = { 0,1,2 };
 	glVertexPointer(3, GL_FLOAT, 0, Vertex);
@@ -322,45 +322,37 @@ void keyboard(unsigned char key, int x, int y)
 {
 	static Matrix3_t temp;
 	// 이렇게 하면 대소문자 둘다 커버 가능
-	for (size_t i = 0; i < 3; i++)
-	{
-		Vertex[i] = Sub3f(Vertex[i], GetVector3f(TriPosX, TriPosY, 0.F));
-	}
 	switch (key | 0x20)
 	{
 	case 'w':
-		TriPosY += 0.1;
+		TriPosX = 0.F;
+		TriPosY = 0.1F;
 		break;
 	case 'a':
-		TriPosX -= 0.1;
+		TriPosX = -0.1F;
+		TriPosY = 0.F;
 		break;
 	case 's':
-		TriPosY -= 0.1;
+		TriPosX = 0.F;
+		TriPosY = -0.1F;
 		break;
 	case 'd':
-		TriPosX += 0.1;
+		TriPosX = 0.1F;
+		TriPosY = 0.F;
 		break;
 	case 'r':
 		bWire = !bWire;
 		break;
 	case 'e':
-		/*
-		temp = GetRotateMatrix(Angle, 0, 0);
-		RotationMatrix = temp;
-		MulVectorMatrix3(Vertex, Vertex, 3, &RotationMatrix);
-		*/
-		PivotRotate(-Angle);
+		TriPosX = TriPosY = 0.F;
+		PivotRotate(-Angle, Vertex, 3);
 		break;
 	case 'q':
-		PivotRotate(Angle);
+		TriPosX = TriPosY = 0.F;
+		PivotRotate(Angle, Vertex, 3);
 		break;
 	default:
 		break;
-	}
-
-	for (size_t i = 0; i < 3; i++)
-	{
-		Vertex[i] = Sum3f(Vertex[i], GetVector3f(TriPosX, TriPosY, 0.F));
 	}
 	glutPostRedisplay();
 }
