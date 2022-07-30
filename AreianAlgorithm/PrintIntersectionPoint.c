@@ -48,7 +48,7 @@ int bWire = 1;
 
 float TriPosX = 0.F;
 float TriPosY = 0.F;
-float Size = 0.5;
+float Size = 0.5F;
 int Angle = 1;
 Vector3f_t Vertex[3];
 static Matrix3_t RotationMatrix;
