@@ -5,7 +5,7 @@
 *.pdb
 *.opendb
 *.suo
-/bin
+/bin/
 /bin/x64
 /Debug/**
 /Release/**
@@ -19,3 +19,5 @@
 *.db-shm
 *.db
 *.tlog
+*/packages/**
+/packages/

@@ -115,6 +115,25 @@ typedef struct
 		{
 			float _11;
 			float _12;
+      
+			float _21;
+			float _22;
+		};
+		struct
+		{
+			float M[2][2];
+		};
+	};
+} Matrix2_t;
+
+typedef struct
+{
+	union
+	{
+		struct
+		{
+			float _11;
+			float _12;
 			float _13;
 
 			float _21;
