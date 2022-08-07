@@ -5,11 +5,19 @@
 #include "LinearAlgebra.h"
 
 
-#define W_H 500
-#define W_W 500
+#define W_H 3000
+#define W_W 3000
+
+
+typedef struct {
+	GLfloat Voxel[24][5];
+}VoxelModel;
+
+
 int bim = 0;
 int View = 1;
-
+int angleX = 0;
+int angleY = 0;
 GLfloat R = 0.7;
 GLfloat camx = 0, camy = 0, camz = 1;
 GLfloat hrzndegree = 0, vrtcldegree = 0;
@@ -23,9 +31,9 @@ void Display(void);
 void Reshape(int width, int height);
 GLubyte* LoadBmp(const char* imagePath, int* width, int* height);
 void InitTexture(unsigned char* data, int width, int height);
-void CreateVoxel(GLfloat size, GLfloat posx, GLfloat posy, GLfloat posz);
 void Modeling(void);
-
+void CreateVoxel(Vector3f_t* vertex, Voxel_t* outVoxel);
+void ModelLoad(Voxel_t* VoxelArr, int VexelCount, VoxelModel* modelBuf);
 
 int main(int argc, char** argv)
 {	
@@ -47,7 +55,6 @@ int main(int argc, char** argv)
 	// 은면제거  
 	//glEnable(GL_CULL_FACE);
 	
-
 	int imageWidht, imageHeight;
 	glEnable(GL_TEXTURE_2D);
 	GLubyte* Texture = LoadBmp("test-pattern.bmp", &imageWidht, &imageHeight);
@@ -61,7 +68,6 @@ int main(int argc, char** argv)
 	return 0;
 
 }
-
 
 GLubyte* LoadBmp(const char* imagePath, int* width, int* height)
 {
@@ -121,73 +127,157 @@ void InitTexture(unsigned char* data, int width, int height)
 }
 
 void Modeling(void)
-{
-	CreateVoxel(0.2F, 0.6F, 0.0F, 0.0F);
-	glDrawArrays(GL_QUADS, 0, 24);
-	CreateVoxel(0.2F, 0.2F, 0.0F, 0.0F);
-	glDrawArrays(GL_QUADS, 0, 24);
-	CreateVoxel(0.2F,0.2F, 0.4F, 0.0F);
-	glDrawArrays(GL_QUADS, 0, 24);
-	CreateVoxel(0.2F,-0.2F, 0.4F, 0.0F);
-	glDrawArrays(GL_QUADS, 0, 24);
+{	
+	// IO 단계로 옮길 애들---------------
+	/*
+	이부분은 한번만 해도 되서 여기 있으면 안됨
+	*/
+	int voxelCount = 4;
+	Vector3f_t vertex[4][8] = {
+		{
+		{0.00F ,-0.10F ,0.00F},
+		{0.00F ,-0.10F ,0.10F},
+		{0.00F , 0.00F ,0.10F},
+		{0.00F , 0.00F ,0.00F},
+		{0.10F ,-0.10F ,0.00F},
+		{0.10F , 0.00F ,0.00F},
+		{0.10F , 0.00F ,0.10F},
+		{0.10F ,-0.10F ,0.10F},
+		},
+		{
+		{0.00F ,-0.20F ,0.10F},
+		{0.00F ,-0.20F ,0.20F},
+		{0.00F ,-0.10F ,0.20F},
+		{0.00F ,-0.10F ,0.10F},
+		{0.10F ,-0.20F ,0.10F},
+		{0.10F ,-0.10F ,0.10F},
+		{0.10F ,-0.10F ,0.20F},
+		{0.10F ,-0.20F ,0.20F},
+		},
+		{
+		{0.00F ,-0.10F ,0.10F},
+		{0.00F ,-0.10F ,0.20F},
+		{0.00F ,0.00F ,0.20F},
+		{0.00F ,0.00F ,0.10F},
+		{0.10F ,-0.10F ,0.10F},
+		{0.10F ,0.00F ,0.10F},
+		{0.10F ,0.00F ,0.20F},
+		{0.10F ,-0.10F ,0.20F},
+		},
+		{
+		{0.00F ,0.00F ,0.10F},
+		{0.00F ,0.00F ,0.20F},
+		{0.00F ,0.10F ,0.20F},
+		{0.00F ,0.10F ,0.10F},
+		{0.10F ,0.00F ,0.10F},
+		{0.10F ,0.10F ,0.10F},
+		{0.10F ,0.10F ,0.20F},
+		{0.10F ,0.00F ,0.20F}
+		}
+	};  // 
+	// 초기 IO 에서 PLY 불러왔을 때 값
+
+	Voxel_t* VoxelArr = malloc(sizeof(Voxel_t)* voxelCount);
+
+	for (int i = 0; i < voxelCount; i++) 
+	{// 복쉘 생성
+		CreateVoxel(vertex[i], VoxelArr+i); // 복쉘 포멧 정리
+	}
+	VoxelModel* modelBuf = malloc(sizeof(VoxelModel) * voxelCount);// 화면 출력 버퍼 생성'
+	ModelLoad(VoxelArr, voxelCount, modelBuf); // 화면 출력할 버퍼 채우기
+	
+	//-----------------------------------modelBuf룰 밖으로 빼줌
+
+	//IO로 위 코드 보내면 밑의 코드만 남음
+	
+	glInterleavedArrays(GL_T2F_V3F, 0, modelBuf);// opengl 로 버퍼 전달
+	glDrawArrays(GL_QUADS, 0, 24* voxelCount); // 출력
+	
+	free(VoxelArr);
+	free(modelBuf);
+
 }
 
-void VoxelVertex(Vector3f_t* verts, Vector3f_t* vertexBuffer,int* Face,int faceLen)
-{
-	for (int i = 0; i < faceLen; i++)
+void ModelLoad(Voxel_t* VoxelArr,int VexelCount, VoxelModel* modelBuf)
+{	
+	GLuint face[24] = {
+		6,2,0,4,
+		3,7,5,1,
+		2,6,7,3,
+		1,5,4,0,
+		7,6,4,5,
+		2,3,1,0
+	};
+
+	GLfloat texCoord[4][2] = {
+		{0.F , 0.F},
+		{1.F , 0.F},
+		{1.F , 1.F},
+		{0.F , 1.F}
+	};
+
+
+	
+
+	for (int Vidx = 0; Vidx < VexelCount; Vidx++)
 	{
-		vertexBuffer[i] = verts[Face[i]];
+		for (int idx = 0; idx < 24; idx++)
+		{	
+			//Texture
+			modelBuf[Vidx].Voxel[idx][0] = texCoord[idx%4][0];
+			modelBuf[Vidx].Voxel[idx][1] = texCoord[idx%4][1];
+
+			//Vertex
+			modelBuf[Vidx].Voxel[idx][2] = VoxelArr[Vidx].Vertex[face[idx]].X;
+			modelBuf[Vidx].Voxel[idx][3] = VoxelArr[Vidx].Vertex[face[idx]].Y;
+			modelBuf[Vidx].Voxel[idx][4] = VoxelArr[Vidx].Vertex[face[idx]].Z;
+			
+		}
+
+			
 	}
 
+
+	
 }
 
-void CreateVoxel(GLfloat size, GLfloat posx, GLfloat posy, GLfloat posz)
+void CreateVoxel(Vector3f_t* vertex, Voxel_t* outVoxel)
 {
-	
+	Vector3f_t tempVert[2]; 
+	tempVert[1].X = tempVert[0].X = vertex[0].X;
+	tempVert[1].Y = tempVert[0].Y = vertex[0].Y;
+	tempVert[1].Z = tempVert[0].Z = vertex[0].Z;
 
-	GLfloat modelBuf[24][5] = {
-		//앞면
-		//Tw	Th		Vx		Vy		Vz
-		{0.0F , 0.0F , -1.0F* size + posx, -1.0F* size + posy,  1.0F* size + posz},
-		{1.0F , 0.0F ,  1.0F* size + posx, -1.0F* size + posy,  1.0F* size + posz},
-		{1.0F , 1.0F ,  1.0F* size + posx,  1.0F* size + posy,  1.0F* size + posz},
-		{0.0F , 1.0F , -1.0F* size + posx,  1.0F* size + posy,  1.0F* size + posz},
+	for (int idx = 0; idx < 8; idx++)
+	{
+		if (vertex[idx].X > tempVert[1].X)tempVert[1].X = vertex[idx].X;
+		else if (vertex[idx].X < tempVert[0].X)tempVert[0].X = vertex[idx].X;
 
-		//뒷면
-		{1.0F , 0.0F , -1.0F* size + posx, -1.0F* size + posy, -1.0F* size + posz},
-		{1.0F , 1.0F , -1.0F* size + posx,  1.0F* size + posy, -1.0F* size + posz},
-		{0.0F , 1.0F ,  1.0F* size + posx,  1.0F* size + posy, -1.0F* size + posz},
-		{0.0F , 0.0F ,  1.0F* size + posx, -1.0F* size + posy, -1.0F* size + posz},
-		
-		//윗면
-		{0.0F , 1.0F , -1.0F* size + posx,  1.0F* size + posy, -1.0F* size + posz},
-		{0.0F , 0.0F , -1.0F* size + posx,  1.0F* size + posy,  1.0F* size + posz},
-		{1.0F , 0.0F ,  1.0F* size + posx,  1.0F* size + posy,  1.0F* size + posz},
-		{1.0F , 1.0F ,  1.0F* size + posx,  1.0F* size + posy, -1.0F* size + posz},
+		if (vertex[idx].Y > tempVert[1].Y)tempVert[1].Y = vertex[idx].Y;
+		else if (vertex[idx].Y < tempVert[0].Y)tempVert[0].Y = vertex[idx].Y;
 
-		//바닥면
-		{1.0F , 1.0F , -1.0F* size + posx, -1.0F* size + posy, -1.0F* size + posz},
-		{0.0F , 1.0F ,  1.0F* size + posx, -1.0F* size + posy, -1.0F* size + posz},
-		{0.0F , 0.0F ,  1.0F* size + posx, -1.0F* size + posy,  1.0F* size + posz},
-		{1.0F , 0.0F , -1.0F* size + posx, -1.0F* size + posy,  1.0F* size + posz},
-
-		//오른쪽 옆면
-		{1.0F , 0.0F ,  1.0F* size + posx, -1.0F* size + posy, -1.0F* size + posz},
-		{1.0F , 1.0F ,  1.0F* size + posx,  1.0F* size + posy, -1.0F* size + posz},
-		{0.0F , 1.0F ,  1.0F* size + posx,  1.0F* size + posy,  1.0F* size + posz},
-		{0.0F , 0.0F ,  1.0F* size + posx, -1.0F* size + posy,  1.0F* size + posz},
-
-		//왼쪽 옆면
-		{0.0F , 0.0F , -1.0F* size + posx, -1.0F* size + posy, -1.0F* size + posz},
-		{1.0F , 0.0F , -1.0F* size + posx, -1.0F* size + posy,  1.0F* size + posz},
-		{1.0F , 1.0F , -1.0F* size + posx,  1.0F* size + posy,  1.0F* size + posz},
-		{0.0F , 1.0F , -1.0F* size + posx,  1.0F* size + posy, -1.0F* size + posz},
-
-	};
-	glInterleavedArrays(GL_T2F_V3F,0,modelBuf);
+		if (vertex[idx].Z > tempVert[1].Z)tempVert[1].Z = vertex[idx].Z;
+		else if (vertex[idx].Z < tempVert[0].Z)tempVert[0].Z = vertex[idx].Z;
+	}
 
 	
+	int idx_x = 0;
+	int idx_y = 0;
+
+	for (int idx = 0; idx < 8; idx++)
+	{
+		outVoxel->Vertex[idx].X = tempVert[idx_x].X;
+		if ((idx + 1) % 4 == 0) idx_x = 1;
+
+		outVoxel->Vertex[idx].Y = tempVert[idx_y].Y;
+		if ((idx + 1) % 2 == 0) idx_y = (idx_y+1)%2;
+
+		outVoxel->Vertex[idx].Z = tempVert[idx%2].Z;
+
+
+	}
 }
+
 
 void Display(void)
 {
@@ -200,9 +290,10 @@ void Display(void)
 	camz = pow(R * R + camy * camy, (double)0.5) * sin(hrzndegree);
 	gluLookAt(camx, camy, camz, 0, 0, 0, 0, 1, 0);
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	
-	
+	glRotatef(angleY, 0, 1, 0);
+	glRotatef(angleX, 1, 0, 0);
 	Modeling();
 	glFlush();
 
@@ -278,9 +369,11 @@ void keyboard(unsigned char key, int x, int y)
 	case '6':
 		hrzndegree -= 0.1;
 		break;
-	case 'b':
-		bim = !bim;
-		printf("%d", bim);
+	case 'x':
+		angleX += 90;
+		break;
+	case 'y':
+		angleY += 90;
 		break;
 
 	}
