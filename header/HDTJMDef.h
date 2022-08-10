@@ -11,7 +11,7 @@
 // x86
 #define GetAlignedSize(size) ((size + 3) & ~3)
 #endif
-
+#define IsPointer(ptr) (ptr < (void**)0x10000)
 
 // Get Vector by scalar
 #define GetVector2i(x, y) ( (Vector2i_t){ (int)(x), (int)(y) } )
