@@ -54,17 +54,17 @@ void StoreVertex(
 			}
 		}
 		colorArr[*colorIndex].rgba = tempColor.rgba;
-		(* colorIndex)++; // 1(0 -> 1), 
+		(*colorIndex)++; // 1(0 -> 1), 
 	CMP_ELEMENTS:
 		for (k = 0; k < vertexIndexArr[j]; k++) // 0
 		{
-			if (outVertex[8 * j + k].X == x 
-				&& outVertex[8 * j + k].Y == y 
-				&& outVertex[8 * j + k].Z == z )
+			if (outVertex[8 * j + k].X == x
+				&& outVertex[8 * j + k].Y == y
+				&& outVertex[8 * j + k].Z == z)
 			{
 				goto ELEMENT_EXIST;
 			}
-		}		
+		}
 		outVertex[8 * j + k].X = x;
 		outVertex[8 * j + k].Y = y;
 		outVertex[8 * j + k].Z = z;
@@ -78,7 +78,7 @@ int main(void)
 	int ret = 0;
 
 	int lineCounter = 0;
-	int element_vertex = 0; //반복할 횟수 저장할 곳 == aaa파일에서 72
+	int elementVertex = 0; //반복할 횟수 저장할 곳 == aaa파일에서 72
 	int colorIndex = 0;
 	Vector3f_t* xyz = NULL;
 	RGBA_t* colorArr = NULL;
@@ -105,13 +105,13 @@ int main(void)
 		}
 	}
 
-	sscanf(buf, "%s %s %d", element, vertex, &element_vertex);
+	sscanf(buf, "%s %s %d", element, vertex, &elementVertex);
 	printf("%s\n", buf); //불러온거 확인용
-	printf("%d\n", element_vertex);
+	printf("%d\n", elementVertex);
 
-	xyz = malloc(element_vertex * sizeof(Vector3f_t));
-	colorArr = calloc(element_vertex / 8, sizeof(RGBA_t));
-	vertexIndex = calloc(element_vertex / 8, sizeof(int));
+	xyz = malloc(elementVertex * sizeof(Vector3f_t));
+	colorArr = calloc(elementVertex / 8, sizeof(RGBA_t));
+	vertexIndex = calloc(elementVertex / 8, sizeof(int));
 
 	for (; lineCounter < 13; lineCounter++)
 	{
@@ -122,17 +122,20 @@ int main(void)
 		}
 	}
 	printf("%s\n", buf);
-	StoreVertex(xyz, fp, &colorIndex, colorArr, vertexIndex, element_vertex);
+	StoreVertex(xyz, fp, &colorIndex, colorArr, vertexIndex, elementVertex);
 
 	// --- file in end ---
 	int vertexCount = 0;
-	
-	for (size_t i = 0; i < colorIndex * 8; i++)
+
+	for (size_t i = 0; i < colorIndex; i++)
 	{
-		printf("%f %f %f\t", xyz[i].X, xyz[i].Y, xyz[i].Z);
-		vertexCount++;
+		printf("\nvoxel%llu\n", i);
+		for (size_t j = 0; j < 8; j++)
+		{
+			printf("    %f %f %f\n", xyz[8 * i + j].X, xyz[8 * i + j].Y, xyz[8 * i + j].Z);
+		}
 	}
-	printf("\nVertex count : % d\nVoxel count : % d\n", vertexCount, colorIndex);
+	//printf("\nVertex count : % d\nVoxel count : % d\n", vertexCount, colorIndex);
 
 PROC_END:
 	free(vertexIndex);
