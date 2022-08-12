@@ -146,7 +146,7 @@ void ZFree(void* ptr)
 		I_Error("Z_Free: freed a pointer without ZONE_ID");
 	}
 
-	if (IsPointer(block->User))
+	if (!IsPointer(block->User))
 	{
 		// smaller vules are not pointers
 		// OS-depnded
@@ -329,7 +329,7 @@ void ZDumpHeap(int lowTag, int highTag)
 	{
 		if (block->Tag >= lowTag && block->Tag <= highTag)
 		{
-			printf("block: %p\tsize:%7lld\tuser:%p\ttag:%3d\n", 
+			printf("block: %p\tsize:%7lld\tuser:%p\ttag:%3d\n",
 				block, block->Size, block->User, block->Tag);
 		}
 		if (block->Next == &MainZone->BlockList)
@@ -364,9 +364,9 @@ void ZFileDumpHeap(FILE* fp)
 
 	for (block = MainZone->BlockList.Next; ; block = block->Next)
 	{
-		fprintf(fp, "block:%p\tsize:%7llu\tuser:%p\ttag:%3d\n", 
+		fprintf(fp, "block:%p\tsize:%7llu\tuser:%p\ttag:%3d\n",
 			block, block->Size, block->User, block->Tag);
-		
+
 		if (block->Next == &MainZone->BlockList)
 		{
 			// all blocks have been hit
@@ -390,14 +390,83 @@ void ZFileDumpHeap(FILE* fp)
 
 void ZCheckHeap(void)
 {
+	MemBlock_t* block;
 
+	for (block = MainZone->BlockList.Next; ; block = block->Next)
+	{
+		if (block->Next == &MainZone->BlockList)
+		{
+			// all blocks have been hit
+			break;
+		}
+		if ((byte_t*)block + block->Size != (byte_t*)block->Next)
+		{
+			I_Error("Z_CheckHeap: block size does not touch the next block\n");
+		}
+		if (block->Next->Prev != block)
+		{
+			I_Error("Z_CheckHeap: two consecutive free blocks\n");
+		}
+	}
 }
 
 
+//
+// Z_ChangeTag2
+//
+void ZChangeTag2(void* ptr, int tag)
+{
+	MemBlock_t* block;
+	
+	block = (MemBlock_t*)((byte_t*)ptr - sizeof(MemBlock_t));
 
+	if (block->ID != ZONE_ID)
+	{
+		I_Error("Z_ChangeTag: freed a pointer without ZONEID");
+	}
+
+
+	if (tag >= PU_PURGELEVEL && !IsPointer(block->User))
+	{
+		I_Error("Z_ChangeTag: an owner is required for purgable blocks");
+	}
+
+	block->Tag = tag;
+}
+
+//
+// ZFreeMemory
+//
+int ZFreeMemory(void)
+{
+	MemBlock_t*	block;
+	size_t		free;
+
+	free = 0;
+
+	for (block = MainZone->BlockList.Next;
+		block != &MainZone->BlockList;
+		block = block->Next)
+	{
+		if (!block->User || block->Tag >= PU_PURGELEVEL)
+		{
+			free += block->Size;
+		}
+	}
+
+	return free;
+}
 // main.c
 
 int main(size_t argc, char** argv)
 {
+	ZInit();
 
+	Vector4f_t* testVector = ZMalloc(480 * 1024, PU_STATIC, 0);
+	{
+		float* testVector = ZMalloc(480 * 1024, PU_STATIC, 1);
+		/*ZFreeTags(1, 1);*/
+	}
+	ZFree(testVector);
+	ZFreeMemory();
 }

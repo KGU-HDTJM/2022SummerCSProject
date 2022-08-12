@@ -3,18 +3,15 @@
 #define STACK_ALLOCATION_EXPORTS
 #include "StackAlloc.h"
 
-pStack_t __cdecl CreateStack(size_t size)
+pStack_t __cdecl CreateStack(size_t size/* heap memory*/)
 {
-	pStack_t stack = malloc(sizeof(Stack_t));
+	pStack_t stack;
+
 	size = GetAlignedSize(size);
+	stack = malloc(sizeof(Stack_t) + size + 1);
 	if (!stack) { return NULL; }
-	stack->memBlock = malloc(size + 1);
-	if (!stack->memBlock)
-	{
-		free(stack);
-		return NULL;
-	}
-	stack->BP = (char*)stack->memBlock + size;
+
+	stack->BP = (byte_t*)stack + sizeof(Stack_t) + size;
 	stack->SP = stack->BP;
 
 	return stack;
@@ -22,13 +19,12 @@ pStack_t __cdecl CreateStack(size_t size)
 
 void __cdecl ReleaseStack(pStack_t stack)
 {
-	free(stack->memBlock);
 	free(stack);
 }
 
 boolean_t __cdecl StackOF(pStack_t stack)
 {
-	return (Word_t)stack->memBlock < (Word_t)stack->SP;
+	return (Word_t)((byte_t*)stack + sizeof(Stack_t)) < (Word_t)stack->SP;
 }
 
 boolean_t __cdecl StackUF(pStack_t stack)

@@ -12,6 +12,11 @@
 #define STACK_API __declspec(dllimport)
 #endif
 
+typedef struct
+{
+	char* SP, * BP;
+}Stack_t, * pStack_t;
+
 extern STACK_API pStack_t __cdecl CreateStack(size_t size);
 extern STACK_API void __cdecl ReleaseStack(pStack_t stack);
 extern STACK_API boolean_t __cdecl StackOF(pStack_t stack);
