@@ -18,6 +18,12 @@
     <ClCompile Include="PrintIntersectionPoint.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="MakeConsequentialVertex.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="RadixSortAlgorithm.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

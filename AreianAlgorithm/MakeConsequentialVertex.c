@@ -1,4 +1,4 @@
-ï»¿#define _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
 
 #include <GL/glut.h>
 #include <stdio.h>
@@ -39,10 +39,10 @@ const Line SQUARE_RANGE[4] = {
 #define W_W 500
 
 
-// ê¹€ë¯¼ìž¬ ì½”ë”©í‘œì¤€ì¢€ ì§€ì¼œ ë‚˜ì¤‘ì—ëŠ” ì—†ê³  ì´  ì½”ë“œ ì½ê²Œë˜ëŠ” ì‹œê°„ì´í›„ë¡œ ë‹¹ìž¥
-// ì½”ë“œ ê³ ì¹˜ë©´ íƒœìœ¤ì´í•˜ê³  ê°™ì´ ì½ì–´ë³´ë¼ê³  ì‹œí‚¬ê»€ë° ëª»ë´¤ë‹¤ê³  í•˜ë©´ 200% ë³€ëª…ìœ¼ë¡œ ë°›ì•„ë“¤ì¼êº¼ìž„
+// ±è¹ÎÀç ÄÚµùÇ¥ÁØÁ» ÁöÄÑ ³ªÁß¿¡´Â ¾ø°í ÀÌ  ÄÚµå ÀÐ°ÔµÇ´Â ½Ã°£ÀÌÈÄ·Î ´çÀå
+// ÄÚµå °íÄ¡¸é ÅÂÀ±ÀÌÇÏ°í °°ÀÌ ÀÐ¾îº¸¶ó°í ½ÃÅ³²«µ¥ ¸øºÃ´Ù°í ÇÏ¸é 200% º¯¸íÀ¸·Î ¹Þ¾ÆµéÀÏ²¨ÀÓ
 
-// float ìƒìˆ˜ ë’¤ì— Fë¶™ì´ëŠ”ê±° ëŒ€ì†Œë¬¸ìž ì‹ ê²½ì¨ì£¼ê³ 
+// float »ó¼ö µÚ¿¡ FºÙÀÌ´Â°Å ´ë¼Ò¹®ÀÚ ½Å°æ½áÁÖ°í
 
 int bWire = 1;
 
@@ -86,7 +86,7 @@ Matrix3_t GetRotateMatrix(int zAngle, int yAngle, int xAngle)
 }
 
 
-// ì¼ë‹¨ í‰ë©´ìœ¼ë¡œ  ê°€ì •í•´ì„œ ë§Œë“¬(,angle) 
+// ÀÏ´Ü Æò¸éÀ¸·Î  °¡Á¤ÇØ¼­ ¸¸µë(,angle) 
 void PivotRotate(int zAngle)
 {
 	Matrix3_t m0;
@@ -132,22 +132,22 @@ void DrawSq(void)
 	glDrawElements(GL_QUADS, 4, GL_UNSIGNED_INT, Face);
 }
 
-// í•¨ìˆ˜ì´ë¦„ ì¢€ë” ëª…ì‹œì ìœ¼ë¡œ, ìˆ˜ì‹ì—ì„œ ê°€ì ¸ì˜¨ê±°ë¼ë©´ ì£¼ì„ìœ¼ë¡œ ìˆ˜ì‹ì˜ ì¶œì²˜ì™€ ë‚´ìš©ì„ ê°„ëžµí•˜ê²Œ ì ì–´ì£¼ë©´ ì¢‹ì„êº¼ ê°™ìŒ
+// ÇÔ¼öÀÌ¸§ Á»´õ ¸í½ÃÀûÀ¸·Î, ¼ö½Ä¿¡¼­ °¡Á®¿Â°Å¶ó¸é ÁÖ¼®À¸·Î ¼ö½ÄÀÇ ÃâÃ³¿Í ³»¿ëÀ» °£·«ÇÏ°Ô Àû¾îÁÖ¸é ÁÁÀ»²¨ °°À½
 int Direction(const Point* a, const Point* b, const Point* c)
 {
-	/* ---Hê°€ ì¶”ê°€-- */
-	// ë‹¤ë¥¸ ë°©ë²•ìœ¼ë¡œ ë¶„ê¸°ì—†ì´ ê³„ì‚° ê°€ëŠ¥ í• êº¼ ê°™ì§€ë§Œ í…Œì´ë¸” ì°¸ì¡°í•˜ëŠ”ê²Œ ì œì¼ ì½”ë“œê°€ ê°„ê²°í•´ì§€ëŠ”ê±° ê°™ìŒ
+	/* ---H°¡ Ãß°¡-- */
+	// ´Ù¸¥ ¹æ¹ýÀ¸·Î ºÐ±â¾øÀÌ °è»ê °¡´É ÇÒ²¨ °°Áö¸¸ Å×ÀÌºí ÂüÁ¶ÇÏ´Â°Ô Á¦ÀÏ ÄÚµå°¡ °£°áÇØÁö´Â°Å °°À½
 	const static int RET_TABLE[2][2] = { { 0, 0 }, { 1, -1 } };
-	/* ---Hê°€ ì¶”ê°€--- */
+	/* ---H°¡ Ãß°¡--- */
 	Matrix2_t mat = GetMatrix2(a->X - c->X, a->Y - c->Y, b->X - c->X, b->Y - c->Y);
 	float value = Det2(mat);
 	int bNegNum = value < 0;
 	int temp = !EqualFloat(value, 0.F);
-	/* ---Hê°€ ì¶”ê°€--- */
+	/* ---H°¡ Ãß°¡--- */
 
 	return RET_TABLE[temp][bNegNum];
-	/* ---Hê°€ ì¶”ê°€--- */
-	// ë¶„ê¸°ê°€ ë„ˆë¬´ ë§ŽìŒ (ìµœì í™” íž˜ë“¤ì–´ì ¸)
+	/* ---H°¡ Ãß°¡--- */
+	// ºÐ±â°¡ ³Ê¹« ¸¹À½ (ÃÖÀûÈ­ Èûµé¾îÁ®)
 	// truth table
 	// row: cross == 0, col: cross > 0
 	//			true	false
@@ -160,7 +160,7 @@ int Direction(const Point* a, const Point* b, const Point* c)
 boolean_t OnSegment(Point* a, Point* b, Point* c)
 {
 	/*
-	* ë¶ˆí•„ìš”í•œ ë¶„ê¸° False = 0, True = 1ì´ë‹ˆê¹Œ ë°”ë¡œ ì—°ì‚°ê²°ê³¼ë¥¼ ë¦¬í„´í•˜ë©´ë¨
+	* ºÒÇÊ¿äÇÑ ºÐ±â False = 0, True = 1ÀÌ´Ï±î ¹Ù·Î ¿¬»ê°á°ú¸¦ ¸®ÅÏÇÏ¸éµÊ
 	if (c.x >= min(a.x, b.x) && c.x <= max(a.x, b.x) && c.y >= min(a.y, b.y) && c.y <= max(a.y, b.y))
 		return True;
 	return False;
@@ -218,11 +218,11 @@ void ReviseVertex(Vector3f_t* vertex)
 	printf("\n");
 }
 
-// í•¨ìˆ˜ì˜ ê¸°ëŠ¥ì„ ì¢€ë” ìž‘ê°œ ë¶„ë¦¬í•  í•„ìš”ê°€ìžˆìŒ, ì°¨ë¦¬ë¦¬ 3ê°í˜• vertexë¥¼ ë°›ì•„ì„œ ê·¸ê±¸ë¡œ 3ê°í˜• ê·¸ë¦¬ëŠ”ê²Œ ë‚«ì§€ ì´ëŸ°ì‹ìœ¼ë¡œ ë§Œë“¤ì–´ì„œ ê·¸ë¦¬ëŠ”ê±° í•˜ì§€ë§ˆ
+// ÇÔ¼öÀÇ ±â´ÉÀ» Á»´õ ÀÛ°³ ºÐ¸®ÇÒ ÇÊ¿ä°¡ÀÖÀ½, Â÷¸®¸® 3°¢Çü vertex¸¦ ¹Þ¾Æ¼­ ±×°É·Î 3°¢Çü ±×¸®´Â°Ô ³´Áö ÀÌ·±½ÄÀ¸·Î ¸¸µé¾î¼­ ±×¸®´Â°Å ÇÏÁö¸¶
 
 void DrawTri(float x, float y)
 {
-	// ê¸°ë³¸ì ìœ¼ë¡œ ì»´ë§ˆ(,)ë¡œ êµ¬ë¶„ë˜ëŠ” ê°’ì€ ë„ì–´ì“°ê¸°ë¡œ ë„ì–´ì¤˜
+	// ±âº»ÀûÀ¸·Î ÄÄ¸¶(,)·Î ±¸ºÐµÇ´Â °ªÀº ¶ç¾î¾²±â·Î ¶ç¾îÁà
 	for (size_t i = 0; i < 3; i++)
 	{
 		Vertex[i] = Sum3f(Vertex[i], GetVector3f(x, y, 0.F));
@@ -234,7 +234,7 @@ void DrawTri(float x, float y)
 	glRotatef(0, 0.0, 0.0, 1.0);
 
 
-	// ì±„ì›€ ê³µê°„ì€ ì‚¼ê°í˜•ë§Œ í•˜ë©´ ë˜ëŠ”ê±°ë‹ˆê¹Œ PolygonModeì„¤ì •ì€ ì‚¼ê°í˜•ì—ì„œë§Œ
+	// Ã¤¿ò °ø°£Àº »ï°¢Çü¸¸ ÇÏ¸é µÇ´Â°Å´Ï±î PolygonMode¼³Á¤Àº »ï°¢Çü¿¡¼­¸¸
 	if (bWire) { glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); }
 	else { glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); }
 
@@ -303,7 +303,7 @@ void Reshape(int width, int height)
 void keyboard(unsigned char key, int x, int y)
 {
 	static Matrix3_t temp;
-	// ì´ë ‡ê²Œ í•˜ë©´ ëŒ€ì†Œë¬¸ìž ë‘˜ë‹¤ ì»¤ë²„ ê°€ëŠ¥
+	// ÀÌ·¸°Ô ÇÏ¸é ´ë¼Ò¹®ÀÚ µÑ´Ù Ä¿¹ö °¡´É
 	switch (key | 0x20)
 	{
 	case 'w':
@@ -317,7 +317,7 @@ void keyboard(unsigned char key, int x, int y)
 	case 's':
 		TriPosX = 0.F;
 		TriPosY = -0.1F;
-		break; 
+		break;
 	case 'd':
 		TriPosX = 0.1F;
 		TriPosY = 0.F;
@@ -359,7 +359,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_SINGLE);
 	glutInitWindowSize(1000, 1000);
 	glutInitWindowPosition(300, 200);
-	glClearColor(0.0, 0.5, 0.0, 0.3);//rgba (a: íˆ¬ëª…ë„)
+	glClearColor(0.0, 0.5, 0.0, 0.3);//rgba (a: Åõ¸íµµ)
 
 	glutCreateWindow("Lighting");
 	glEnableClientState(GL_VERTEX_ARRAY);

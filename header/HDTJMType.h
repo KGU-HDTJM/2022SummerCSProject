@@ -113,6 +113,24 @@ typedef struct
 	{
 		struct
 		{
+			int X;
+			int Y;
+			int Z;
+			int W;
+		};
+		struct
+		{
+			int V[4];
+		};
+	};
+} Vector4i_t;
+
+typedef struct
+{
+	union
+	{
+		struct
+		{
 			float _11;
 			float _12;
 
