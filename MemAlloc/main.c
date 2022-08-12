@@ -4,6 +4,7 @@
 
 #include "HDTJMType.h"
 #include "HDTJMDef.h"
+#include "LinearAlgebra.h"
 
 /*------i_system.c--------*/
 
@@ -460,13 +461,24 @@ int ZFreeMemory(void)
 
 int main(size_t argc, char** argv)
 {
+	size_t temp = 480 * 1024;
 	ZInit();
-
-	Vector4f_t* testVector = ZMalloc(480 * 1024, PU_STATIC, 0);
+	
+	Vector4f_t* testVector = ZMalloc(temp, PU_STATIC, 0);
+	ZDumpHeap(0, 0);
 	{
-		float* testVector = ZMalloc(480 * 1024, PU_STATIC, 1);
-		/*ZFreeTags(1, 1);*/
+		float* testVector = ZMalloc(temp, PU_STATIC, 1);
+		for (size_t i = 0; i < temp; i++)
+		{
+			
+		}
+		ZDumpHeap(0, 1);
+		ZFreeTags(1, 1);
 	}
 	ZFree(testVector);
+	ZDumpHeap(0, 0);
 	ZFreeMemory();
+
+	free(MainZone);
+	return 0;
 }
