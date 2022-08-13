@@ -463,6 +463,7 @@ int main(size_t argc, char** argv)
 {
 	size_t temp = 480 * 1024;
 	ZInit();
+	ZClearZone(MainZone);
 	
 	Vector4f_t* testVector = ZMalloc(temp, PU_STATIC, 0);
 	ZDumpHeap(0, 0);
