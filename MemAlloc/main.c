@@ -462,6 +462,7 @@ int ZFreeMemory(void)
 int main(size_t argc, char** argv)
 {
 	size_t temp = 480 * 1024;
+	// float arr[4] = { 3.14F, 1.59F, 9.65F, 3.58F };
 	ZInit();
 	ZClearZone(MainZone);
 	
@@ -471,7 +472,7 @@ int main(size_t argc, char** argv)
 		float* testVector = ZMalloc(temp, PU_STATIC, 1);
 		for (size_t i = 0; i < temp; i++)
 		{
-			
+			testVector[i] = 3.412F * i;
 		}
 		ZDumpHeap(0, 1);
 		ZFreeTags(1, 1);
