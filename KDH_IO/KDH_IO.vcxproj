@@ -143,6 +143,9 @@
   <ItemGroup>
     <ClCompile Include="KDHIO.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="KDHIO.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
