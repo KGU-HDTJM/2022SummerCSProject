@@ -17,7 +17,7 @@
 #define GetAlignedSize(size) ((size + 3) & ~3)
 #endif
 
-#define IsPointer(ptr) ((Word_t)ptr > (Word_t)0x10000)
+#define IsPointer(ptr) ((Word_t)ptr >= (Word_t)0x10000)
 
 #define GetBoolean(bValue) ((bValue) = (bValue) && (bValue))
 

@@ -147,7 +147,7 @@ void ZFree(void* ptr)
 		I_Error("Z_Free: freed a pointer without ZONE_ID");
 	}
 
-	if (!IsPointer(block->User))
+	if (IsPointer(block->User))
 	{
 		// smaller vules are not pointers
 		// OS-depnded
@@ -255,7 +255,7 @@ void* ZMalloc(size_t size, int tag, void* user)
 	if (extra > MINFRAGMENT)
 	{
 		// there will be a free fragment after the allocated block
-		newBlock = (MemBlock_t*)((byte_t*)base + size);
+		newBlock = ((byte_t*)base + size);
 		newBlock->Size = extra;
 
 		// NULL indicates free block.
@@ -465,21 +465,23 @@ int main(size_t argc, char** argv)
 	// float arr[4] = { 3.14F, 1.59F, 9.65F, 3.58F };
 	ZInit();
 	ZClearZone(MainZone);
-	
-	Vector4f_t* testVector = ZMalloc(temp, PU_STATIC, 0);
-	ZDumpHeap(0, 0);
+	ZMalloc(temp, PU_STATIC, NULL);
+	Vector4f_t* testVector = ZMalloc(temp, PU_STATIC, NULL);
+	ZDumpHeap(PU_STATIC, PU_STATIC);
 	{
-		float* testVector = ZMalloc(temp, PU_STATIC, 1);
+		float* testFloatVector = ZMalloc(temp, PU_STATIC, NULL);
 		for (size_t i = 0; i < temp; i++)
 		{
-			testVector[i] = 3.412F * i;
+			testFloatVector[i] = 3.412F * i;
 		}
-		ZDumpHeap(0, 1);
-		ZFreeTags(1, 1);
+		ZDumpHeap(PU_STATIC, PU_STATIC);
+		ZFreeTags(PU_STATIC, PU_STATIC);
+		ZFree(testFloatVector);
 	}
+	printf("%d", ZFreeMemory());
 	ZFree(testVector);
 	ZDumpHeap(0, 0);
-	ZFreeMemory();
+	
 
 	free(MainZone);
 	return 0;
