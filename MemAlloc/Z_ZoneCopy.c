@@ -120,9 +120,9 @@ void ZInit(void)
 	MainZone = /*(MemZone_t*)*/IZoneBase(&size);
 	MainZone->Size = size;
 
-	MainZone->BlockList.Next =
-		MainZone->BlockList.Prev =
-		block = /*(Z_MemBlock_t*)*/((byte_t*)MainZone + sizeof(MemZone_t));
+	MainZone->BlockList.Next 
+		= MainZone->BlockList.Prev 
+		= block = /*(Z_MemBlock_t*)*/((byte_t*)MainZone + sizeof(MemZone_t));
 
 	MainZone->BlockList.User = MainZone;
 	MainZone->BlockList.Tag = PU_STATIC;
