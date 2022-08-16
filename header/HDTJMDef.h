@@ -7,7 +7,7 @@
 
 #define EPSILON_F 1.19e-07F
 
-#define EqualFloat(a, b) (fabs((a) - (b)) <  EPSILON_F)
+#define FloatEqual(a, b) (fabs((a) - (b)) <  EPSILON_F)
 
 #if defined(_WIN64)
 // x86_64

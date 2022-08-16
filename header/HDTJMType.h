@@ -12,10 +12,10 @@ typedef enum { False, True } boolean_t;
 
 #if defined (_WIN64)
 // x86_64
-typedef long long Word_t;
+typedef unsigned long long Word_t;
 #else
 // x86
-typedef int Word_t;
+typedef unsigned int Word_t;
 #endif
 
 #endif

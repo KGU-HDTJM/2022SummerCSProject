@@ -3,7 +3,7 @@
 #define STACK_ALLOCATION_EXPORTS
 #include "StackAlloc.h"
 
-pStack_t __cdecl CreateStack(size_t size/* heap memory*/)
+pStack_t __cdecl CreateStack(size_t size/*, heap* memory*/)
 {
 	pStack_t stack;
 
@@ -24,7 +24,7 @@ void __cdecl ReleaseStack(pStack_t stack)
 
 boolean_t __cdecl StackOF(pStack_t stack)
 {
-	return (Word_t)((byte_t*)stack + sizeof(Stack_t)) < (Word_t)stack->SP;
+	return (Word_t)((byte_t*)stack + sizeof(Stack_t)) > (Word_t)stack->SP;	
 }
 
 boolean_t __cdecl StackUF(pStack_t stack)
