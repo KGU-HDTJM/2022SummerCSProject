@@ -99,7 +99,7 @@ void ZClearZone(MemZone_t* zone)
 	Z_MemBlock_t* block;
 
 	zone->BlockList.Next =
-		zone->BlockList.Prev =
+		zone->BlockList.Prev =  
 		block = (Z_MemBlock_t*)((byte_t*)zone + sizeof(MemZone_t));
 
 	zone->BlockList.User = (void*)zone;

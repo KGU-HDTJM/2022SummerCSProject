@@ -58,6 +58,7 @@ pHeap_t InitSubMem(void* buf, size_t size)
 pHeap_t InitMem(size_t heapSize)
 {
 	const size_t size = GetAlignedSize(heapSize);
+
 	MainHeap = InitSubMem(malloc(size), size);
 
 	return MainHeap;
@@ -66,11 +67,15 @@ pHeap_t InitMem(size_t heapSize)
 void ClearHeap(pHeap_t heap)
 {
 	MemBlock_t* block;
+
+	heap->BlockList.Next = heap->BlockList.Prev
+		= block = ((byte_t*)heap + sizeof(Heap_t));
+
 }
 
 
 int main(void)
 {
 	pHeap_t mainMemory = InitMem(4 * 0x400 * 0x400);
-
+	 
 }
