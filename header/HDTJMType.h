@@ -7,7 +7,7 @@ typedef unsigned char byte_t;
 typedef unsigned short ushort_t;
 typedef unsigned int uint_t;
 typedef unsigned long long ull_t;
-// boolean_t ¹è¿­À» »ç¿ëÇÏ°Å³ª 1 byte boolean ÇüÀÇ ¹è¿­ÀÌ ÇÊ¿äÇÑ°æ¿ì byte_t »ç¿ëÀ» ±ÇÀåÇÔ
+// boolean_t ë°°ì—´ì„ ì‚¬ìš©í•˜ê±°ë‚˜ 1 byte boolean í˜•ì˜ ë°°ì—´ì´ í•„ìš”í•œê²½ìš° byte_t ì‚¬ìš©ì„ ê¶Œì¥í•¨
 typedef enum { False, True } boolean_t;
 
 #if defined (_WIN64)
