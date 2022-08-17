@@ -3,25 +3,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "HDTJMType.h"
-
+#include "KDHIO.h"
 #define BUFFER_SIZE 0x80
 #define GetRGBA(red, green, blue, alpha)\
 	(RGBA_t){ (byte_t)red, (byte_t)green, (byte_t)blue, (byte_t)alpha };
-
-typedef union
-{
-	struct
-	{
-		byte_t Red;
-		byte_t Green;
-		byte_t Blue;
-		byte_t Alpha;
-	};
-	int rgba;
-} RGBA_t;
-
 char buf[BUFFER_SIZE] = { 0, };
 
 void StoreVertex(
@@ -29,6 +15,7 @@ void StoreVertex(
 	RGBA_t* colorArr, int* vertexIndexArr, int elementVertex
 )
 {
+
 	float x = 0;
 	float y = 0;
 	float z = 0;
@@ -73,6 +60,7 @@ void StoreVertex(
 	}
 }
 
+
 int main(void)
 {
 	int ret = 0;
@@ -90,7 +78,7 @@ int main(void)
 
 
 
-	FILE* fp = fopen("../resource/testio.ply", "r"); //파일 오픈
+	FILE* fp = fopen("TetrisBlock1.ply", "r"); //파일 오픈
 	if (fp == NULL) //파일없으면 에러처리
 	{
 		printf("파일 없다.\n");
@@ -129,12 +117,13 @@ int main(void)
 	
 	for (size_t i = 0; i < colorIndex * 8; i++)
 	{
-		printf("%f %f %f\t", xyz[i].X, xyz[i].Y, xyz[i].Z);
+		printf("{%.2fF ,%.2fF ,%.2fF}\t\n", xyz[i].X, xyz[i].Y, xyz[i].Z);
 		vertexCount++;
+		if ( ((i+1) % 8) == 0 )printf("\n");
 	}
 	printf("\nVertex count : % d\nVoxel count : % d\n", vertexCount, colorIndex);
 
-PROC_END:
+	PROC_END:
 	free(vertexIndex);
 	free(colorArr);
 	free(xyz);
