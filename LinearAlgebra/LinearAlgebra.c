@@ -1,5 +1,5 @@
 #include <math.h>
-
+#include "HDTJMDef.h"
 #define LINEAR_ALGEBRA_EXPORTS
 #include "LinearAlgebra.h"
 
@@ -33,7 +33,8 @@ Vector3f_t __cdecl Normalize3(const Vector3f_t* a)
 
 Vector4f_t __cdecl Normalize4(const Vector4f_t* a)
 {
-	return DivScalar4f(sqrt(Dot4f(*a, *a)), *a);
+	Vector4f_t result = DivScalar4f(sqrt(Dot3f(*a, *a)), *a);
+	result.W = 
 }
 
 Matrix3_t __cdecl MulMatrix3(const Matrix3_t* mA, const Matrix3_t* mB)
@@ -73,12 +74,12 @@ Matrix4_t __cdecl MulMatrix4(const Matrix4_t* mA, const Matrix4_t* mB)
 	return result;
 }
 
-void __cdecl MulVectorMatrix3(Vector3f_t* out, const Vector3f_t* arr, unsigned long long length, const Matrix3_t* m)
+void __cdecl MulVectorMatrix3(Vector3f_t* out, const Vector3f_t* arr, size_t length, const Matrix3_t* m)
 {
 	if (out == arr)
 	{
 		Vector3f_t temp;
-		for (size_t i = 0; i < length; i++)
+		for (size_t i = 0; i < length; i++)	
 		{
 			temp = arr[i];
 			for (size_t j = 0; j < 3; j++)
@@ -107,7 +108,7 @@ void __cdecl MulVectorMatrix3(Vector3f_t* out, const Vector3f_t* arr, unsigned l
 	}
 }
 
-void __cdecl MulVectorMatrix4(Vector4f_t* out, const Vector4f_t* arr, unsigned long long length, const Matrix4_t* m)
+void __cdecl MulVectorMatrix4(Vector4f_t* out, const Vector4f_t* arr, size_t length, const Matrix4_t* m)
 {
 	if (out == arr)
 	{
