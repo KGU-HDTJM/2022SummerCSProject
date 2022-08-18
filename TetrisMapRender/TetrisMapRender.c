@@ -19,9 +19,9 @@
 #define GRID_MAX_SIZE (SIZE_Y * SIZE_Z * SIZE_X)
 #define VOXEL_SIZE 0.2F
 
-//grid View mode
-#define MAP_GRID_MODE 0
-#define VOXEL_GRID_MODE 1
+//View mode
+#define LINE_MODE 0
+#define SOLID_MODE 1
 
 int inputPosX, inputPosZ, inputPosY;
 
@@ -74,7 +74,7 @@ int angleX = 0;
 int angleZ = 0;
 int angleY = 0;
 int gridMode = 0;
-
+int voxelMode = 0;
 voxelCount = 0;
 volatile float ModelY = 1;
 
@@ -240,8 +240,17 @@ void Display(void)
 	camz = (GLfloat)pow(R * R + camy * camy, (GLfloat)0.5) * (GLfloat)sin(hrzndegree);
 	gluLookAt(camx, camy, camz, 0, 0, 0, 0, 1, 0);
 
-	
-	DrawTetrisMap(mapDataBuf,SIZE_X,SIZE_Z,SIZE_Y,0.05F);
+	for (int i = 0; i < SIZE_Y; i++)
+	{
+		if (IsFullFloor(mapDataBuf, i))
+		{
+			BreakFullFloor(mapDataBuf, i);
+		}
+	}
+	//
+	//-------------------------------------
+	//
+	DrawTetrisMap(mapDataBuf,SIZE_X,SIZE_Z,SIZE_Y,0.1F);
 
 	glFlush();
 
@@ -320,6 +329,9 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'm':
 		gridMode = (gridMode + 1) % 3;
 		break;
+	case 'v':
+		voxelMode = (voxelMode + 1) % 2;
+		break;
 	default:
 		break;
 	}
@@ -332,16 +344,8 @@ void DrawFrame(int num)
 }
 
 
-//Tetris Map 
-int GetVoxelCount(int* arr, const int sizeMax)
-{
-	int voxelCount = 0;
-	for (int i = 0; i < sizeMax; i++)
-	{
-		voxelCount += arr[i];
-	}
-	return voxelCount;
-}
+//Tetris Map  설계
+
 void ReVoxelSize(Vector3f_t* tempVoxel, GLfloat size)
 {
 	for (int i = 0; i < 8; i++)
@@ -426,6 +430,7 @@ void CreateVoxelMap(int sizeX, int sizeY, int sizeZ, int* dataBuf, float voxelSi
 }
 void CreateMapBuffer(Voxel_t* VoxelArr, Voxel_t* gridArr, int voxelCount, VoxelModel* modelBuf, VoxelModel* gridBuf, int gridSize, GLfloat voxelSize)
 {
+
 	GLuint faceQuads[VOXEL_DATA_SIZE_QUADS] = {
 		6,2,0,4,
 		3,7,5,1,
@@ -448,29 +453,12 @@ void CreateMapBuffer(Voxel_t* VoxelArr, Voxel_t* gridArr, int voxelCount, VoxelM
 		1,5,4,
 		4,0,1,
 
-		\
+		7,6,4,
+		4,5,7,
 
+		2,3,1,
+		1,0,2
 	};
-
-
-	GLfloat xMaxPos = SIZE_X * voxelSize * 0.5F;
-	GLfloat yMaxPos = SIZE_Y * voxelSize * 0.5F;
-	GLfloat zMaxPos = SIZE_Z * voxelSize * 0.5F;
-
-	Vector3f_t mapGrid[8] = {
-		{	  xMaxPos,-1 * yMaxPos,-1 * zMaxPos},
-		{	  xMaxPos,-1 * yMaxPos,	   zMaxPos},
-		{	  xMaxPos,	   yMaxPos,-1 * zMaxPos},
-		{	  xMaxPos,	   yMaxPos,	   zMaxPos},
-
-		{-1 * xMaxPos,-1 * yMaxPos,-1 * zMaxPos},
-		{-1 * xMaxPos,-1 * yMaxPos,	   zMaxPos},
-		{-1 * xMaxPos,	   yMaxPos,-1 * zMaxPos},
-		{-1 * xMaxPos,	   yMaxPos,	   zMaxPos}
-	};
-
-
-
 
 	if (gridMode == VOXEL_GRID_MODE)
 	{
@@ -482,7 +470,6 @@ void CreateMapBuffer(Voxel_t* VoxelArr, Voxel_t* gridArr, int voxelCount, VoxelM
 				gridBuf[Vidx].Voxel[idx][0] = gridArr[Vidx].Vertex[faceQuads[idx]].X;
 				gridBuf[Vidx].Voxel[idx][1] = gridArr[Vidx].Vertex[faceQuads[idx]].Y;
 				gridBuf[Vidx].Voxel[idx][2] = gridArr[Vidx].Vertex[faceQuads[idx]].Z;
-
 			}
 
 
@@ -524,13 +511,7 @@ void DrawTetrisMap(int* mapDataBuf, int sizeX, int sizeZ, int sizeY,GLfloat voxe
 	int voxelCount;
 	int gridMaxSize = sizeX * sizeZ * sizeY;
 	voxelCount = GetVoxelCount(mapDataBuf, gridMaxSize);
-	for (int i = 0; i < SIZE_Y; i++)
-	{
-		if (IsFullFloor(mapDataBuf, i))
-		{
-			BreakFullFloor(mapDataBuf, i);
-		}
-	}
+
 	
 	Push(mapBufStack, &mapBufStack->BP);
 	mapBufStack->BP = mapBufStack->SP;
@@ -541,6 +522,7 @@ void DrawTetrisMap(int* mapDataBuf, int sizeX, int sizeZ, int sizeY,GLfloat voxe
 	VoxelModel* gridBufAdress = SubSP(mapBufStack, sizeof(VoxelModel) * gridMaxSize);
 
 	LoadMapBuf(mapDataBuf, sizeX, sizeY, sizeZ, voxelSize, voxelCount,voxelBufAdress,gridBufAdress,voxelArr,gridArr);
+
 	RenderMap(mapDataBuf, voxelSize, voxelCount, gridMode, voxelBufAdress, gridBufAdress);
 
 	mapBufStack->SP = mapBufStack->BP;
@@ -574,11 +556,190 @@ void RenderMap(int* mapDataBuf, int gridSize, int voxelCount, int gridMode,
 		glDrawArrays(GL_QUADS, 0, VOXEL_DATA_SIZE_QUADS);
 	}
 	//Voxel
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	if (voxelMode == SOLIDMODE)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+	else {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+	
 	glInterleavedArrays(GL_V3F, 0, outVoxelAdress);
 	glDrawArrays(GL_TRIANGLES, 0, VOXEL_DATA_SIZE_TRIANGLES * voxelCount);
 
 }
+
+
+
+//기능 분리
+int GetVoxelCount(int* arr, const int sizeMax)
+{
+	int voxelCount = 0;
+	for (int i = 0; i < sizeMax; i++)
+	{
+		voxelCount += arr[i];
+	}
+	return voxelCount;
+}
+void Render(VoxelModel* DrawBufferAddress,int drawMode,GLsizei buffeCount)
+{
+	if (drawMode == LINE_MODE) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+	else if (drawMode == SOLID_MODE)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
+
+	glInterleavedArrays(GL_V3F, 0, DrawBufferAddress);
+	glDrawArrays(GL_QUADS, 0, buffeCount);
+}
+void VoxelFaceMapping(int* face,int faceSize ,Voxel_t inVoxel,Vector3f_t* outVoxelVert)
+{
+	for (int idx = 0; idx < faceSize; idx++)
+	{
+		sizeof(Voxel_t);
+		//gridVertex 
+		outVoxelVert[idx].X = inVoxel.Vertex[idx].X;
+		outVoxelVert[idx].Y = inVoxel.Vertex[idx].Y;
+		outVoxelVert[idx].Z = inVoxel.Vertex[idx].Z;
+	}
+}
+void MulScale(Vector3f_t* tempVoxel, GLfloat size,int vertexSize)
+{
+	for (int i = 0; i < vertexSize; i++)
+	{
+		tempVoxel[i].X *= size;
+		tempVoxel[i].Y *= size;
+		tempVoxel[i].Z *= size;
+	}
+}
+void VoxelTrans(Vector3f_t* stdVoxel, Vector3f_t* tempVoxel, GLfloat x, GLfloat y, GLfloat z, GLfloat voxelSize)
+{
+	for (int i = 0; i < 8; i++)
+	{
+		tempVoxel[i].X = stdVoxel[i].X + x + voxelSize * 0.5F;
+		tempVoxel[i].Y = stdVoxel[i].Y + y;
+		tempVoxel[i].Z = stdVoxel[i].Z + z + voxelSize * 0.5F;
+	}
+}
+
+
+
+
+// 재설계
+{
+	GLuint faceQuads[VOXEL_DATA_SIZE_QUADS] = {
+		6,2,0,4,
+		3,7,5,1,
+		2,6,7,3,
+		1,5,4,0,
+		7,6,4,5,
+		2,3,1,0
+	};
+
+	GLuint faceTriangles[VOXEL_DATA_SIZE_TRIANGLES] = {
+		6,2,0,
+		0,4,6,
+
+		3,7,5,
+		5,1,3,
+
+		2,6,7,
+		7,3,2,
+
+		1,5,4,
+		4,0,1,
+
+		7,6,4,
+		4,5,7,
+
+		2,3,1,
+		1,0,2
+	};
+
+	GLfloat xMaxPos = SIZE_X * voxelSize * 0.5F;
+	GLfloat yMaxPos = SIZE_Y * voxelSize * 0.5F;
+	GLfloat zMaxPos = SIZE_Z * voxelSize * 0.5F;
+
+	Vector3f_t mapGrid[8] = {
+		{	  xMaxPos,-1 * yMaxPos,-1 * zMaxPos},
+		{	  xMaxPos,-1 * yMaxPos,	   zMaxPos},
+		{	  xMaxPos,	   yMaxPos,-1 * zMaxPos},
+		{	  xMaxPos,	   yMaxPos,	   zMaxPos},
+
+		{-1 * xMaxPos,-1 * yMaxPos,-1 * zMaxPos},
+		{-1 * xMaxPos,-1 * yMaxPos,	   zMaxPos},
+		{-1 * xMaxPos,	   yMaxPos,-1 * zMaxPos},
+		{-1 * xMaxPos,	   yMaxPos,	   zMaxPos}
+	};//테트리스의 각 끝 좌표
+
+
+
+	int voxelCount;
+	int gridMaxSize = sizeX * sizeZ * sizeY;
+	voxelCount = GetVoxelCount(mapDataBuf, gridMaxSize);
+
+
+	Push(mapBufStack, &mapBufStack->BP);
+	mapBufStack->BP = mapBufStack->SP;
+
+	Voxel_t* voxelArr = SubSP(mapBufStack, sizeof(Voxel_t) * voxelCount);
+	Voxel_t* gridArr = SubSP(mapBufStack, sizeof(Voxel_t) * gridMaxSize);
+	VoxelModel* voxelBufAdress = SubSP(mapBufStack, sizeof(VoxelModel) * voxelCount);
+	VoxelModel* gridBufAdress = SubSP(mapBufStack, sizeof(VoxelModel) * gridMaxSize);
+
+
+	//LoadMapBuf(mapDataBuf, sizeX, sizeY, sizeZ, voxelSize, voxelCount, voxelBufAdress, gridBufAdress, voxelArr, gridArr);
+
+		//CreateVoxelMap(sizeX, sizeY, sizeZ, mapDataBuf, voxelSize, voxelArr, gridArr);
+				
+
+		//CreateMapBuffer(voxelArr, gridArr, voxelCount, outVoxelAdress, outGridAdress, gridSize, voxelSize);
+				
+
+
+
+
+
+	//RenderMap(mapDataBuf, voxelSize, voxelCount, gridMode, voxelBufAdress, gridBufAdress);
+
+
+
+
+
+	mapBufStack->SP = mapBufStack->BP;
+	mapBufStack->BP = *mapBufStack->SP;
+	(void**)Pop(mapBufStack);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

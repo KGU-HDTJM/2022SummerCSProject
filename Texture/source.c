@@ -2,11 +2,12 @@
 #include <GL/freeglut.h>
 #include <stdio.h>
 #include <math.h>
+
 #include <Windows.h>
 #include <process.h>
 #include "LinearAlgebra.h"
 #include "HDTJMType.h"
-
+#include "CL/cl.h"
 
 #define W_H 3000
 #define W_W 3000
