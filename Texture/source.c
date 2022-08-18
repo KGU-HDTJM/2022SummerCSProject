@@ -32,7 +32,10 @@ GLfloat R = 0.7;
 GLfloat camx = 0, camy = 0, camz = 1;
 GLfloat hrzndegree = 0, vrtcldegree = 0;
 
-
+typedef struct
+{
+	Vector4f_t    Vertex[8];
+} VoxelVertex_t;
 
 void init_light(void);
 void keyboard(unsigned char key, int x, int y);
@@ -41,14 +44,58 @@ void Reshape(int width, int height);
 GLubyte* LoadBmp(const char* imagePath, int* width, int* height);
 void InitTexture(unsigned char* data, int width, int height);
 void Modeling(void);
-void CreateVoxel(Vector3f_t* vertex, Voxel_t* outVoxel);
-void ModelLoad(Voxel_t* VoxelArr, int VexelCount, VoxelModel* modelBuf);
+void CreateVoxel(Vector3f_t* vertex, VoxelVertex_t* outVoxel);
+void ModelLoad(VoxelVertex_t* VoxelArr, int VexelCount, VoxelModel* modelBuf);
 
 void Draw(void)
 {
 	glutPostRedisplay();      //윈도우를 다시 그리도록 요청
 	glutTimerFunc(8, Draw, 0); //다음 타이머 이벤트는 30밀리세컨트 후  호출됨.
 }
+
+void SortVoxelArr(VoxelVertex_t* outVoxel, Vector3f_t* vertex, size_t voxelCount)
+{
+	Vector3f_t tempVert[2] = { 0, };
+
+	for (size_t i = 0; i < voxelCount; i++)
+	{
+		tempVert[1].X = tempVert[0].X = vertex[8 * i].X;
+		tempVert[1].Y = tempVert[0].Y = vertex[8 * i].Y;
+		tempVert[1].Z = tempVert[0].Z = vertex[8 * i].Z;
+
+		for (int j = 0; j < 8; j++)
+		{
+			if (vertex[8 * i + j].X > tempVert[1].X) { tempVert[1].X = vertex[8 * i + j].X; }
+			else if (vertex[8 * i + j].X < tempVert[0].X) { tempVert[0].X = vertex[8 * i + j].X; }
+
+			if (vertex[8 * i + j].Y > tempVert[1].Y) { tempVert[1].Y = vertex[8 * i + j].Y; }
+			else if (vertex[8 * i + j].Y < tempVert[0].Y) { tempVert[0].Y = vertex[8 * i + j].Y; }
+
+			if (vertex[8 * i + j].Z > tempVert[1].Z) { tempVert[1].Z = vertex[8 * i + j].Z; }
+			else if (vertex[8 * i + j].Z < tempVert[0].Z) { tempVert[0].Z = vertex[8 * i + j].Z; }
+		}
+
+		boolean_t y = 0;
+		for (int j = 0; j < 8; j++)
+		{
+			outVoxel[i].Vertex[j].X = tempVert[ j > 3].X;
+		
+			outVoxel[i].Vertex[j].Y = tempVert[ j % 4 < 2].Y;
+			outVoxel[i].Vertex[j].Z = tempVert[j%2].Z;
+
+			printf("%f %f %f \n",
+				outVoxel[i].Vertex[j].X,
+				outVoxel[i].Vertex[j].Y,
+				outVoxel[i].Vertex[j].Z
+			);
+
+		
+		}
+	
+	}
+}
+
+
 
 
 void ThreadMove(void)
@@ -124,12 +171,17 @@ int main(int argc, char** argv)
 	};  // 
 	// 초기 IO 에서 PLY 불러왔을 때 값
 
-	Voxel_t* VoxelArr = malloc(sizeof(Voxel_t) * voxelCount);
+	VoxelVertex_t* VoxelArr = malloc(sizeof(VoxelVertex_t) * voxelCount);
 
-	for (int i = 0; i < voxelCount; i++)
-	{// 복쉘 생성
-		CreateVoxel(vertex[i], VoxelArr + i); // 복쉘 포멧 정리
-	}
+	//printf("1\n");
+	//for (int i = 0; i < voxelCount; i++)
+	//{// 복쉘 생성
+	//CreateVoxel(vertex[i], VoxelArr + i); // 복쉘 포멧 정리
+	//}
+	//printf("2\n");
+	SortVoxelArr(VoxelArr,vertex,voxelCount);
+
+
 	modelBuf = malloc(sizeof(VoxelModel) * voxelCount);// 화면 출력 버퍼 생성'
 	ModelLoad(VoxelArr, voxelCount, modelBuf); // 화면 출력할 버퍼 채우기
 
@@ -240,7 +292,7 @@ void Modeling(void)
 
 }
 
-void ModelLoad(Voxel_t* VoxelArr, int VexelCount, VoxelModel* modelBuf)
+void ModelLoad(VoxelVertex_t* VoxelArr, int VexelCount, VoxelModel* modelBuf)
 {
 	GLuint face[VOXEL_SIZE] = {
 		6,2,0,4,
@@ -281,7 +333,7 @@ void ModelLoad(Voxel_t* VoxelArr, int VexelCount, VoxelModel* modelBuf)
 
 }
 
-void CreateVoxel(Vector3f_t* vertex, Voxel_t* outVoxel)
+void CreateVoxel(Vector3f_t* vertex, VoxelVertex_t* outVoxel)
 {
 	Vector3f_t tempVert[2];
 	tempVert[1].X = tempVert[0].X = vertex[0].X;
@@ -312,7 +364,14 @@ void CreateVoxel(Vector3f_t* vertex, Voxel_t* outVoxel)
 		if ((idx + 1) % 2 == 0) idx_y = (idx_y + 1) % 2;
 
 		outVoxel->Vertex[idx].Z = tempVert[idx % 2].Z;
+
+		printf("%f %f %f \n",
+			outVoxel->Vertex[idx].X,
+			outVoxel->Vertex[idx].Y,
+			outVoxel->Vertex[idx].Z
+		);
 	}
+	printf("\n");
 }
 
 
