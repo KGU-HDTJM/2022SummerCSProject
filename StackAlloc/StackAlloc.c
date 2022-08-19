@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #define STACK_ALLOCATION_EXPORTS
+
 #include "StackAlloc.h"
 
 pStack_t __cdecl CreateStack(size_t size/*, heap* memory*/)
