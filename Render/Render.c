@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <GL/freeglut.h>
 #include <stdio.h>
+#include <math.h>
 #include "Render.h"
 #include "HDTJMDef.h"
 #include "HDTJMType.h"
@@ -23,10 +24,7 @@ void VertRotafe(Vector3f_t* vertex, size_t vertexSize, float Angle, boolean_t ax
 	double rad;
 	float sine, cosine;
 	float posGx = 0, posGy = 0, posGz = 0;
-	float vx, vy;
-	/*posGx = (vertex[0].X + vertex[1].X + vertex[2].X) / 3;
-	posGy = (vertex[0].Y + vertex[1].Y + vertex[2].Y) / 3;*/
-
+	float vx, vy, vz;
 	for (int i = 0; i < vertexSize; i++)
 	{
 		posGx += vertex[i].X;
@@ -38,7 +36,7 @@ void VertRotafe(Vector3f_t* vertex, size_t vertexSize, float Angle, boolean_t ax
 	vertex[0].X -= posGx; vertex[1].X -= posGx; vertex[2].X -= posGx;
 	vertex[0].Y -= posGy; vertex[1].Y -= posGy; vertex[2].Y -= posGy;
 
-	rad = TO_RAD(Angle);
+	rad = (Angle/180)*PI;
 	sine = (float)sin(rad); cosine = (float)cos(rad);
 
 	mZ._11 = cosine;	mZ._12 = -sine;		mZ._13 = posGx;
@@ -50,39 +48,42 @@ void VertRotafe(Vector3f_t* vertex, size_t vertexSize, float Angle, boolean_t ax
 	mY._31 = -sine;		mY._32 = posGz;			mY._33 = cosine;
 
 	mX._11 = 1.F;		mX._12 = 0;			mX._13 = 0;
-	mX._21 = posGy;			mX._22 = cosine;	mX._23 = -sine;
-	mX._31 = posGz;			mX._32 = sine;		mX._33 = cosine;
+	mX._21 = posGy;		mX._22 = cosine;	mX._23 = -sine;
+	mX._31 = posGz;		mX._32 = sine;		mX._33 = cosine;
 
 	if (axisX)
 	{
 		for (int i = 0; i < vertexSize; i++)
-		{
+		{	
 			vx = vertex[i].X;
 			vy = vertex[i].Y;
-			vertex[i].X = mZ._11 * vx + mZ._12 * vy + mZ._13;
-			vertex[i].Y = mZ._21 * vx + mZ._22 * vy + mZ._23;
+			vz = vertex[i].Z;
+			vertex[i].Y = mX._21 * vx + mX._22 * vy + mX._23 *vz;
+			vertex[i].Z = mX._31 * vx + mX._32 * vy + mX._33 *vz;
 		}
 	}
 	
-	if (axisX)
+	if (axisY)
 	{
 		for (int i = 0; i < vertexSize; i++)
 		{
 			vx = vertex[i].X;
 			vy = vertex[i].Y;
-			vertex[i].X = mZ._21 * vy + mZ._22 * vy + mZ._23;
-			vertex[i].Y = mZ._31 * vy + mZ._32 * vy + mZ._33;
+			vz = vertex[i].Z;
+			vertex[i].X = mX._11 * vx + mX._12 * vy + mX._13 * vz;
+			vertex[i].Z = mX._31 * vx + mX._32 * vy + mX._33 * vz;
 		}
 	}
 
-	if (axisX)
+	if (axisZ)
 	{
 		for (int i = 0; i < vertexSize; i++)
 		{
 			vx = vertex[i].X;
 			vy = vertex[i].Y;
-			vertex[i].X = mZ._11 * vx + mZ._12 * vy + mZ._13;
-			vertex[i].Y = mZ._21 * vx + mZ._22 * vy + mZ._23;
+			vz = vertex[i].Z;
+			vertex[i].X = mX._11 * vx + mX._12 * vy + mX._13 * vz;
+			vertex[i].Y = mX._21 * vx + mX._22 * vy + mX._23 * vz;
 		}
 	}
 
@@ -170,22 +171,36 @@ void TextureMapping(Vector2f_t* textureCoord, Vector2f_t* textureBuffer, size_t 
 	}
 }
 
+//IO
 
-//View
-void ViewCam(float vrtciDegree,float hrznDegree,float R)
+void MouseDrag(int x, int y)
 {
-	const float camy = (GLfloat)R * (GLfloat)sin(vrtciDegree);
-	const float camx = (GLfloat)pow(R * R + camy * camy, (GLfloat)0.5) * (GLfloat)cos(hrznDegree);
-	const float camz = (GLfloat)pow(R * R + camy * camy, (GLfloat)0.5) * (GLfloat)sin(hrznDegree);
-	gluLookAt(camx, camy, camz, 0, 0, 0, 0, 1, 0);
+
+	GLuint dx, dy;
+	dx = abs(x - curX);
+	dy = abs(y - curY);
+	
+		
+
+	curX = x;
+	curY = y;
 
 }
 
-void Reshape(float width, float height, float winSizeW, float winSizeH)
+//View 
+void ViewCam(float vrtciDegree,float hrznDegree,float R)
+{
+	GLfloat camy = R * sin(vrtciDegree);
+	GLfloat camx = pow(R * R + camy * camy, (double)0.5) * cos(hrznDegree);
+	GLfloat camz = pow(R * R + camy * camy, (double)0.5) * sin(hrznDegree);
+	gluLookAt(camx, camy, camz, 0, 0, 0, 0, 1, 0);
+
+}
+void Reshape(int width, int height)
 {
 	glViewport(0, 0, width, height);
-	GLfloat factor_w = (GLfloat)width / (GLfloat)winSizeW;
-	GLfloat factor_h = (GLfloat)height / (GLfloat)winSizeH;
+	GLfloat factor_w = (GLfloat)width / (GLfloat)WINDOW_W;
+	GLfloat factor_h = (GLfloat)height / (GLfloat)WINDOW_H;
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -198,7 +213,7 @@ void WireFrameMode()
 {glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);}
 void SoildFrameMode()
 {glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);}
-void Render(Vector3f_t* vertexBuffer, Vector2f_t* textureBuffer ,size_t faceAngleCount, size_t faceSize)
+void Render(Vector3f_t* vertexBuffer, Vector2f_t* textureBuffer ,size_t faceEdgeCount, size_t faceSize)
 {
 	float** renderBuffer;
 	renderBuffer = (float**)malloc(sizeof(float*) * 5);
@@ -220,13 +235,13 @@ void Render(Vector3f_t* vertexBuffer, Vector2f_t* textureBuffer ,size_t faceAngl
 	glInterleavedArrays(GL_T2F_V3F,0, renderBuffer);
 	
 
-	if (faceAngleCount == TRIANGLES)
+	if (faceEdgeCount == TRIANGLES)
 	{
-		glDrawArrays(GL_TRIANGLES,0, faceSize);
+		glDrawArrays(GL_TRIANGLES,0, (GLsizei)faceSize);
 	}
-	else if (faceAngleCount == QAUDS)
+	else if (faceEdgeCount == QAUDS)
 	{
-		glDrawArrays(GL_QUADS,0,faceSize);
+		glDrawArrays(GL_QUADS,0, (GLsizei)faceSize);
 	}
 
 	free(renderBuffer[0]);
