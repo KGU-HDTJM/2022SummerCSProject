@@ -1,10 +1,7 @@
 #include <stdlib.h>
-#include <stdio.h>
-
 
 #include "HDTJMDef.h"
 #include "HDTJMError.h"
-
 #define HEAP_ALLOCATION_EXPORTS
 #include "HeapAlloc.h"
 
@@ -294,16 +291,16 @@ void __cdecl ReleaseMainMem(void)
 	free(MainHeap);
 }
 
-size_t __cdecl GetFreeSpace(pHeap_t heap)
+size_t __cdecl GetFreeMemSize(pHeap_t heapOrNULL)
 {
 	pMemBlock_t block;
 	size_t result;
 
-	if (heap == NULL) { heap = MainHeap; }
+	if (heapOrNULL == NULL) { heapOrNULL = MainHeap; }
 	result = 0;
 
-	for (block = heap->BlockList.Next;
-		block != &heap->BlockList;
+	for (block = heapOrNULL->BlockList.Next;
+		block != &heapOrNULL->BlockList;
 		block = block->Next)
 	{
 		if (!block->User || block->bIsCache)
