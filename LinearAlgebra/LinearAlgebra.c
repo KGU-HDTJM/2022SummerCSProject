@@ -29,18 +29,21 @@ Vector4f_t __cdecl Cross4f(const Vector4f_t* a, const Vector4f_t* b)
 
 Vector3f_t __cdecl Normalize3(const Vector3f_t* a)
 {
-	return DivScalar3f(sqrt(Dot3f(*a, *a)), *a);
+	float scalar = sqrtf(Dot3f(*a, *a));
+	return DivScalar3f(scalar, *a);
 }
 
 Vector4f_t __cdecl Normalize4(const Vector4f_t* a)
 {
-	Vector4f_t result = DivScalar4f(sqrt(Dot3f(*a, *a)), *a);
-	result.W = 
+	float scalar = sqrtf(Dot3f(*a, *a));
+	Vector4f_t result = DivScalar4f(scalar, *a);
+	result.W = (float)(!FloatEqual(result.W, 0.F));
+	return result;
 }
 
 Matrix3_t __cdecl MulMatrix3(const Matrix3_t* mA, const Matrix3_t* mB)
 {
-	Matrix3_t result;
+	Matrix3_t result = { 0, };
 
 	for (size_t i = 0; i < 3; i++)
 	{
@@ -59,7 +62,7 @@ Matrix3_t __cdecl MulMatrix3(const Matrix3_t* mA, const Matrix3_t* mB)
 
 Matrix4_t __cdecl MulMatrix4(const Matrix4_t* mA, const Matrix4_t* mB)
 {
-	Matrix4_t result;
+	Matrix4_t result = { 0, };
 	for (size_t i = 0; i < 4; i++)
 	{
 		for (size_t j = 0; j < 4; j++)

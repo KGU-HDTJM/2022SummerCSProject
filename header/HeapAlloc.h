@@ -1,14 +1,22 @@
 #pragma once
+#include <stdio.h>
+
 #include "HDTJMType.h"
 
 #if defined(HEAP_ALLOCATION_EXPORTS)
+
 #define HEAP_API __declspec(dllexport)
+
 #else
+
 #define HEAP_API __declspec(dllimport)
+
 #endif
 
 #if !defined(HEAPALLOC_H)
+
 #define HEAPALLOC_H
+
 typedef struct MemBlock_s
 {
 	size_t	Size;
@@ -34,5 +42,6 @@ extern HEAP_API void __cdecl DumpHeap(pHeap_t heapOrNULL);
 extern HEAP_API void __cdecl DumpHeapFile(FILE* fp, pHeap_t heapOrNULL);
 extern HEAP_API void __cdecl CheckHeap(pHeap_t heapOrNULL);
 extern HEAP_API void __cdecl ReleaseMainMem(void);
-extern HEAP_API size_t __cdecl GetFreeSpace(pHeap_t heap);
+extern HEAP_API size_t __cdecl GetFreeMemSize(pHeap_t heapOrNULL);
+
 #endif

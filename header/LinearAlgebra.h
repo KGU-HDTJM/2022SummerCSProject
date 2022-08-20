@@ -192,7 +192,7 @@ typedef struct
 // Vector4f_t ȣȯ
 #define Dot3f(v3A, v3B) ( (float)\
 (\
-	(v3B).X * (v3B).X + (v3A).Y * (v3B).Y + (v3A).Z * (v3B).Z\
+	(float)(v3B).X * (float)(v3B).X + (float)(v3A).Y * (float)(v3B).Y + (float)(v3A).Z * (float)(v3B).Z\
 ) )
 
 #define Dot4f(v4A, v4B) ( (float)\
@@ -232,7 +232,7 @@ typedef struct
 
 #define DivScalar3f(scalar, v) ( (Vector3f_t)\
 {\
-	(v).X / scalar, (v).Y / scalar, (v).Z / scalar\
+	(float)(v).X / scalar, (float)(v).Y / scalar, (float)(v).Z / scalar\
 })
 
 #define DivScalar4f(scalar, v) ( (Vector4f_t)\
