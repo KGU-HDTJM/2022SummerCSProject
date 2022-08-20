@@ -438,7 +438,7 @@ void ZChangeTag2(void* ptr, int tag)
 //
 // ZFreeMemory
 //
-int ZFreeMemory(void)
+size_t ZFreeMemory(void)
 {
 	Z_MemBlock_t* block;
 	size_t		free;

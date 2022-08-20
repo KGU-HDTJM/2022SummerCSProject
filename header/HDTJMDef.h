@@ -1,13 +1,14 @@
 #pragma once
+#include <math.h>
+
 #include "HDTJMType.h"
-#include <stdlib.h>
 
 #if !defined(HDTJMDEF_H)
 #define HDTJMDEF_H
 
 #define EPSILON_F 1.19e-07F
 
-#define FloatEqual(a, b) (fabs((a) - (b)) <  EPSILON_F)
+#define FloatEqual(a, b) (fabsf((a) - (b)) <  EPSILON_F)
 
 #if defined(_WIN64)
 // x86_64
