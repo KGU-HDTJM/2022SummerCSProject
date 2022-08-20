@@ -1,4 +1,5 @@
 #include <math.h>
+
 #include "HDTJMDef.h"
 #define LINEAR_ALGEBRA_EXPORTS
 #include "LinearAlgebra.h"
@@ -48,7 +49,7 @@ Matrix3_t __cdecl MulMatrix3(const Matrix3_t* mA, const Matrix3_t* mB)
 			result.M[j][i] = 0;
 			for (size_t k = 0; k < 3; k++)
 			{
-				result.M[i][j] += mA->M[i][k] * mB->M[k][j];
+				result.M[i][j] += mA->M[k][j] * mB->M[i][k];
 			}
 		}
 	}
