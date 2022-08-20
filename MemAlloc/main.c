@@ -3,11 +3,13 @@
 
 #include "HDTJMType.h"
 #include "HDTJMDef.h"
+#include "HDTJMError.h"
+#include "LinearAlgebra.h"
 
 #include "Z_ZoneCopy.c"
 
 // canary
-#define ID_FOR_ALL		0x1d4a11
+#define MEM_ID		0x1d4a11
 
 typedef struct MemBlock_s
 {
@@ -61,29 +63,79 @@ pHeap_t InitMem(size_t heapSize)
 	return MainHeap;
 }
 
-//void ClearHeap(pHeap_t heap)
-//{
-//	MemBlock_t* block;
-//
-//	heap->BlockList.Next = heap->BlockList.Prev
-//		= block = ((byte_t*)heap + sizeof(Heap_t));
-//	heap->BlockList.User = (void*)heap;
-//	heap->BlockList.Tag = MEMTAG_MANUAL;
-//	heap->Rover = block;
-//
-//	block->Prev = block->Next = &heap->BlockList;
-//
-//	block->User = NULL;
-//	block->Size = heap->Size - sizeof(Heap_t);	
-//}
-#define MINFRAGMENT 64
-void* Malloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
+void ClearHeap(pHeap_t heap)
+{
+	pMemBlock_t block;
+
+	heap->BlockList.Next = heap->BlockList.Prev
+		= block = ((byte_t*)heap + sizeof(Heap_t));
+	heap->BlockList.User = (void*)heap;
+	heap->BlockList.bIsCache = False;
+	heap->Rover = block;
+
+	block->Prev = block->Next = &heap->BlockList;
+
+	block->User = NULL;
+	block->Size = heap->Size - sizeof(Heap_t);	
+}
+
+void HFree(pHeap_t heap, void* ptr)
+{
+	pMemBlock_t block;
+	pMemBlock_t other;
+
+	block = ((byte_t*)ptr - sizeof(MemBlock_t));
+
+	Assert(block->ID != ZONE_ID, "HFree: ");
+
+	if (IsPointer(block->User))
+	{
+		*block->User = NULL;
+	}
+
+	block->User = NULL;
+	block->bIsCache = False;
+	block->ID = 0;
+
+	other = block->Prev;
+
+	if (!other->User)
+	{
+		other->Size += block->Size;
+		other->Next = block->Next;
+		other->Next->Prev = other;
+
+		if (block == MainHeap->Rover)
+		{
+			MainHeap->Rover = other;
+		}
+		
+		block = other;
+	}
+
+	other = block->Next;
+
+	if (!other->User)
+	{
+		block->Size += other->Size;
+		block->Next = other->Next;
+		block->Next->Prev = block;
+
+		if (other == MainHeap->Rover)
+		{
+			MainHeap->Rover = block;
+		}
+	}
+}
+
+#define MINFRAGMENT 128
+void* HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
 {
 	size_t extra;
-	MemBlock_t* start;
-	MemBlock_t* rover;
-	MemBlock_t* newBlock;
-	MemBlock_t* base;
+	pMemBlock_t start;
+	pMemBlock_t rover;
+	pMemBlock_t newBlock;
+	pMemBlock_t base;
 
 	size = GetAlignedSize(size) + sizeof(MemBlock_t);
 
@@ -98,18 +150,17 @@ void* Malloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
 	{
 		if (rover == start)
 		{
-#if defined(_DEBUG)
-			printf("MyAlloc: failed on allocation of %llu byte\n", size);
-#endif
+			Assert(rover == start, 
+				"MyAlloc: failed on allocation of %llu byte\n");
 			return NULL;
 		}
-		
-		if (rover->User)
+
+		if (rover-> User)
 		{
 			if (rover->bIsCache)
 			{
 				base = base->Prev;
-				// Free((byte_t*)rover + sizeof(MemBlock_t));
+				HFree(heap, (byte_t*)rover + sizeof(MemBlock_t));
 				base = base->Next;
 				rover = base->Next;
 			}
@@ -158,8 +209,48 @@ void* Malloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
 
 	heap->Rover = base->Next;
 
-	base->ID = ID_FOR_ALL;
+	base->ID = MEM_ID;
 	return (byte_t*)base + sizeof(MemBlock_t);
+}
+
+
+void DumpHeap(pHeap_t heap)
+{
+	MemBlock_t* block;
+	printf("heap size: %llu\tlocation: %p\n", heap->Size, heap);
+
+	for (block = heap->BlockList.Next; ; block = block->Next)
+	{
+		printf("block: %p\tsize:%8llu\tuser: %p\tbIsCache: %c",
+			block, block->Size, block->User, 
+			0x46 + 0xe * block->bIsCache);
+		
+		if (block->Next == &heap->BlockList)
+		{
+			break;
+		}
+
+		if ((byte_t*)block + block->Size != (byte_t*)block->Next)
+		{
+			printf("Error: block size does not touch the next block\n");
+		}
+		if (block->Next->Prev != block)
+		{
+			printf("Error: next block doesn't have proper black link\n");
+		}
+		if (!block->User && !block->Next->User)
+		{
+			printf("Error: two consecutive free blocks\n");
+		}
+	}
+}
+
+
+
+void ReleaseMainHeap(void)
+{
+	ClearHeap(MainHeap);
+	free(MainHeap);
 }
 
 int main(void)

@@ -23,7 +23,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\header\HDTJMAssert.h">
+    <ClInclude Include="..\header\HDTJMError.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

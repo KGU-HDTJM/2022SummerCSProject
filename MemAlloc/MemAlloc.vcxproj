@@ -133,7 +133,7 @@
     <ClCompile Include="Z_ZoneCopy.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\header\HDTJMAssert.h" />
+    <ClInclude Include="..\header\HDTJMError.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

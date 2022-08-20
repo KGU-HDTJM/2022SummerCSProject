@@ -189,7 +189,6 @@ void ZFree(void* ptr)
 //
 #define MINFRAGMENT 64
 
-
 void* ZMalloc(size_t size, int tag, void* user)
 {
 	size_t extra;
@@ -361,7 +360,8 @@ void ZFileDumpHeap(FILE* fp)
 {
 	Z_MemBlock_t* block;
 
-	fprintf(fp, "zone size: %llu\tlocation: %p\n", MainZone->Size, MainZone);
+	fprintf(fp, "zone size: %llu\tlocation: %p\n", 
+		MainZone->Size, MainZone);
 
 	for (block = MainZone->BlockList.Next; ; block = block->Next)
 	{
