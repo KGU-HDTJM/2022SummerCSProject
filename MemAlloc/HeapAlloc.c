@@ -11,7 +11,7 @@
 // The size of the buffer must be an aligned size.
 static pHeap_t MainHeap = NULL;
 
-pHeap_t __cdecl InitSubMem(void* buf, size_t size)
+pHeap_t __fastcall InitSubMem(void* buf, size_t size)
 {
 	pHeap_t result;
 	pMemBlock_t block;
@@ -35,14 +35,14 @@ pHeap_t __cdecl InitSubMem(void* buf, size_t size)
 	return result;
 }
 
-pHeap_t __cdecl InitMem(size_t heapSize)
+pHeap_t __fastcall InitMem(size_t heapSize)
 {
 	const size_t size = GetAlignedSize(heapSize + sizeof(Heap_t));
 	MainHeap = InitSubMem(malloc(size), size);
 	return MainHeap;
 }
 
-void __cdecl ClearHeap(pHeap_t heap)
+void __fastcall ClearHeap(pHeap_t heap)
 {
 	pMemBlock_t block;
 
@@ -58,7 +58,7 @@ void __cdecl ClearHeap(pHeap_t heap)
 	block->Size = heap->Size - sizeof(Heap_t);
 }
 
-void __cdecl HFree(pHeap_t heap, void* ptr)
+void __fastcall HFree(pHeap_t heap, void* ptr)
 {
 	pMemBlock_t block;
 	pMemBlock_t other;
@@ -108,7 +108,7 @@ void __cdecl HFree(pHeap_t heap, void* ptr)
 }
 
 #define MINFRAGMENT 128
-void* __cdecl HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
+void* __fastcall HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
 {
 	size_t extra;
 	pMemBlock_t start;
@@ -194,7 +194,7 @@ void* __cdecl HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
 }
 
 
-void __cdecl DumpHeap(pHeap_t heapOrNULL)
+void __fastcall DumpHeap(pHeap_t heapOrNULL)
 {
 	MemBlock_t* block;
 	if (heapOrNULL == NULL || heapOrNULL == MainHeap)
@@ -231,7 +231,7 @@ void __cdecl DumpHeap(pHeap_t heapOrNULL)
 	}
 }
 
-void __cdecl DumpHeapFile(FILE* fp, pHeap_t heapOrNULL)
+void __fastcall DumpHeapFile(FILE* fp, pHeap_t heapOrNULL)
 {
 	MemBlock_t* block;
 	if (heapOrNULL == NULL || heapOrNULL == MainHeap)
@@ -268,7 +268,7 @@ void __cdecl DumpHeapFile(FILE* fp, pHeap_t heapOrNULL)
 	}
 }
 
-void __cdecl CheckHeap(pHeap_t heapOrNULL)
+void __fastcall CheckHeap(pHeap_t heapOrNULL)
 {
 	pMemBlock_t block;
 	if (!heapOrNULL) { heapOrNULL = MainHeap; }
@@ -285,13 +285,13 @@ void __cdecl CheckHeap(pHeap_t heapOrNULL)
 	}
 }
 
-void __cdecl ReleaseMainMem(void)
+void __fastcall ReleaseMainMem(void)
 {
 	ClearHeap(MainHeap);
 	free(MainHeap);
 }
 
-size_t __cdecl GetFreeMemSize(pHeap_t heapOrNULL)
+size_t __fastcall GetFreeMemSize(pHeap_t heapOrNULL)
 {
 	pMemBlock_t block;
 	size_t result;

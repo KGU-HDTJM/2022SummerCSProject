@@ -1,10 +1,10 @@
 #pragma once
+#ifndef HDTJMDEF_H
+#define HDTJMDEF_H
+
 #include <math.h>
 
 #include "HDTJMType.h"
-
-#if !defined(HDTJMDEF_H)
-#define HDTJMDEF_H
 
 #define EPSILON_F 1.19e-07F
 
