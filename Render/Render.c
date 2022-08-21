@@ -1,17 +1,24 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <GL/freeglut.h>
+#include <GL/glut.h>
+#include <GL/GL.h>
+
+
+#include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
+
 #include "Render.h"
 #include "HDTJMDef.h"
 #include "HDTJMType.h"
 #include "LinearAlgebra.h"
 #include "StackAlloc.h"
 
+#define HDTJM_TRIANGLES
 
-void VertTrans(Vector3f_t* vertex, size_t vertexSize,float posx,float posy,float posz)
+void VertTrans(Vector3f_t* vertex, size_t vertexSize, float posx, float posy, float posz)
 {
-	for (int i = 0 ; i < vertexSize ; i++)
+	for (int i = 0; i < vertexSize; i++)
 	{
 		vertex[i].X += posx;
 		vertex[i].X += posy;
@@ -36,7 +43,7 @@ void VertRotafe(Vector3f_t* vertex, size_t vertexSize, float Angle, boolean_t ax
 	vertex[0].X -= posGx; vertex[1].X -= posGx; vertex[2].X -= posGx;
 	vertex[0].Y -= posGy; vertex[1].Y -= posGy; vertex[2].Y -= posGy;
 
-	rad = (Angle/180)*PI;
+	rad = (Angle / 180) * PI;
 	sine = (float)sin(rad); cosine = (float)cos(rad);
 
 	mZ._11 = cosine;	mZ._12 = -sine;		mZ._13 = posGx;
@@ -54,15 +61,15 @@ void VertRotafe(Vector3f_t* vertex, size_t vertexSize, float Angle, boolean_t ax
 	if (axisX)
 	{
 		for (int i = 0; i < vertexSize; i++)
-		{	
+		{
 			vx = vertex[i].X;
 			vy = vertex[i].Y;
 			vz = vertex[i].Z;
-			vertex[i].Y = mX._21 * vx + mX._22 * vy + mX._23 *vz;
-			vertex[i].Z = mX._31 * vx + mX._32 * vy + mX._33 *vz;
+			vertex[i].Y = mX._21 * vx + mX._22 * vy + mX._23 * vz;
+			vertex[i].Z = mX._31 * vx + mX._32 * vy + mX._33 * vz;
 		}
 	}
-	
+
 	if (axisY)
 	{
 		for (int i = 0; i < vertexSize; i++)
@@ -88,7 +95,7 @@ void VertRotafe(Vector3f_t* vertex, size_t vertexSize, float Angle, boolean_t ax
 	}
 
 }
-void VertScale(Vector3f_t* vertex, size_t vertexSize, float scale )
+void VertScale(Vector3f_t* vertex, size_t vertexSize, float scale)
 {
 	for (int i = 0; i < vertexSize; i++)
 	{
@@ -119,7 +126,7 @@ GLubyte* LoadBmp(const char* imagePath, int* width, int* height)
 	unsigned char* data;
 
 	FILE* file = fopen(imagePath, "rb");
-	if (!file) { printf("Image could not be opened\n"); return 0; }
+	if (!file) { printf("Image could not be opened\n"); return NULL; }
 
 
 	if (fread(header, 1, 54, file) != 54) { // If not 54 bytes read : problem
@@ -162,6 +169,7 @@ void InitTexture(unsigned char* data, int width, int height)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glEnable(GL_TEXTURE_2D);
 }
+
 void TextureMapping(Vector2f_t* textureCoord, Vector2f_t* textureBuffer, size_t vertexCount, size_t textureCount)
 {
 	for (int i = 0; i < vertexCount; i++)
@@ -179,8 +187,8 @@ void MouseDrag(int x, int y)
 	GLuint dx, dy;
 	dx = abs(x - curX);
 	dy = abs(y - curY);
-	
-		
+
+
 
 	curX = x;
 	curY = y;
@@ -188,7 +196,7 @@ void MouseDrag(int x, int y)
 }
 
 //View 
-void ViewCam(float vrtciDegree,float hrznDegree,float R)
+void ViewCam(float vrtciDegree, float hrznDegree, float R)
 {
 	GLfloat camy = R * sin(vrtciDegree);
 	GLfloat camx = pow(R * R + camy * camy, (double)0.5) * cos(hrznDegree);
@@ -196,6 +204,7 @@ void ViewCam(float vrtciDegree,float hrznDegree,float R)
 	gluLookAt(camx, camy, camz, 0, 0, 0, 0, 1, 0);
 
 }
+
 void Reshape(int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -210,18 +219,25 @@ void Reshape(int width, int height)
 
 //Render 
 void WireFrameMode()
-{glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);}
-void SoildFrameMode()
-{glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);}
-void Render(Vector3f_t* vertexBuffer, Vector2f_t* textureBuffer ,size_t faceEdgeCount, size_t faceSize)
 {
-	float** renderBuffer;
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+}
+
+void SoildFrameMode()
+{
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+// PushRenderObject
+void Render(Vector3f_t* vertexBuffer, Vector2f_t* textureBufferOrNULL, Vector3f_t* normalBufferOrNULL, size_t faceSize)
+{
+	/*float** renderBuffer;
 	renderBuffer = (float**)malloc(sizeof(float*) * 5);
 	renderBuffer[0] = (float*)malloc(sizeof(float) * faceSize * 5);
-	for (int i = 1; i < 5; i++) {
+	for (int i = 1; i < 5; i++)
+	{
 		renderBuffer[i] = renderBuffer[i - 1] + faceSize;
 	}
-
 
 	for (int i = 0; i < faceSize; i++)
 	{
@@ -231,19 +247,21 @@ void Render(Vector3f_t* vertexBuffer, Vector2f_t* textureBuffer ,size_t faceEdge
 		renderBuffer[i][3] = vertexBuffer[i].Y;
 		renderBuffer[i][4] = vertexBuffer[i].Z;
 
-	}
-	glInterleavedArrays(GL_T2F_V3F,0, renderBuffer);
-	
+	}*/
 
-	if (faceEdgeCount == TRIANGLES)
-	{
-		glDrawArrays(GL_TRIANGLES,0, (GLsizei)faceSize);
-	}
-	else if (faceEdgeCount == QAUDS)
-	{
-		glDrawArrays(GL_QUADS,0, (GLsizei)faceSize);
-	}
+	// glInterleavedArrays(GL_T2F_V3F, 0, renderBuffer);
+	glVertexPointer(faceSize, GL_FLOAT, 0, vertexBuffer);
+	if (normalBufferOrNULL != NULL) { glNormalPointer(GL_FLOAT, 0, normalBufferOrNULL); }
+	if (textureBufferOrNULL != NULL) { glTexCoordPointer(faceSize, GL_FLOAT, 0, textureBufferOrNULL); }
 
-	free(renderBuffer[0]);
-	free(renderBuffer);
+#if defined(HDTJM_TRIANGLES)
+	glDrawArrays(GL_TRIANGLES, 0, (GLsizei)faceSize);
+#elif defined(HDTJM_QUADS)
+	glDrawArrays(GL_QUADS, 0, (GLsizei)faceSize);
+#else
+	assert(False && "폴리곤의 단위 미지정");
+#endif
+
+	//free(renderBuffer[0]);
+	//free(renderBuffer);
 }

@@ -2,7 +2,7 @@
 
 
 #include <GL/glut.h>
-
+#include <GL/GL.h>
 #include <stdio.h>
 #include <math.h>
 #include <Windows.h>
@@ -155,7 +155,6 @@ int main(int argc, char** argv)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	InitLight();// window 생성후 빛 초기화
-
 
 	// 은면제거  
 	//glEnable(GL_CULL_FACE);
@@ -365,7 +364,8 @@ void CreateVoxelMap(int sizeX, int sizeY, int sizeZ, int* dataBuf, float voxelSi
 }
 void CreateMapBuffer(Voxel_t* VoxelArr, Voxel_t* gridArr, int voxelCount, VoxelModel* modelBuf, VoxelModel* gridBuf, int gridSize, GLfloat voxelSize)
 {
-	GLuint faceQuads[VOXEL_SIZE_QUADS] = {
+	GLuint faceQuads[VOXEL_SIZE_QUADS] = 
+	{
 		6,2,0,4,
 		3,7,5,1,
 		2,6,7,3,
@@ -374,7 +374,8 @@ void CreateMapBuffer(Voxel_t* VoxelArr, Voxel_t* gridArr, int voxelCount, VoxelM
 		2,3,1,0
 	};
 
-	GLuint faceTriangles[VOXEL_SIZE_TRIANGLES] = {
+	GLuint faceTriangles[VOXEL_SIZE_TRIANGLES] = 
+	{
 		6,2,0,
 		0,4,6,
 
