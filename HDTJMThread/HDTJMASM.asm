@@ -3,7 +3,7 @@
 TASBoolean PROC
 
 	mov eax,1
-	xchg DWORD PTR [rcx], eax ; atomic한 명령
+	xchg DWORD PTR [rcx], eax ; atomic 한 명령
 	and eax,eax
 	ret
 TASBoolean ENDP

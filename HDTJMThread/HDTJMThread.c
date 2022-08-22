@@ -5,10 +5,10 @@
 
 void __fastcall SpinlockAcquire(volatile boolean_t* bLock)
 {
-	while (1)
+	for (;;)
 	{
 		while (*bLock);
-		// if (TAS(lock))
+		if (!TASBoolean(bLock))
 		{
 			break;
 		}
@@ -17,7 +17,7 @@ void __fastcall SpinlockAcquire(volatile boolean_t* bLock)
 
 void __fastcall SpinlockRelease(volatile boolean_t* bLock)
 {
-	//
+	*bLock = False;
 }
 
 int main(void)
@@ -28,11 +28,11 @@ int main(void)
 		printf("%llu: ", i);
 		if (!TASBoolean(&bLock))
 		{
-			printf("Locked\n");
+			printf("Get lock Acquire\n");
 		}
 		else
 		{
-			printf("Wait\n");
+			printf("Wait..\n");
 		}
 	}
 }

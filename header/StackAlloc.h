@@ -20,7 +20,7 @@
 typedef struct
 {
 	byte_t* SP, * BP;
-}Stack_t, * pStack_t;
+} Stack_t, * pStack_t;
 
 extern STACK_API pStack_t __fastcall CreateStack(pHeap_t heap, size_t size);
 extern STACK_API void __fastcall ReleaseStack(pHeap_t heap, pStack_t stack);

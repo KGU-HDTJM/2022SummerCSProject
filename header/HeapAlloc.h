@@ -16,7 +16,7 @@ typedef struct MemBlock_s
 	size_t	Size;
 	void** User;
 	boolean_t bIsCache;
-	boolean_t Lock;
+	boolean_t bLock;
 	int		ID; // Canary Value
 	struct MemBlock_s* Next, * Prev;
 } MemBlock_t, * pMemBlock_t;

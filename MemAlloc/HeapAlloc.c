@@ -2,6 +2,7 @@
 
 #include "HDTJMDef.h"
 #include "HDTJMError.h"
+#include "HDTJMThread.h"
 #define HEAP_ALLOCATION_EXPORTS
 #include "HeapAlloc.h"
 
@@ -63,8 +64,7 @@ void __fastcall HFree(pHeap_t heap, void* ptr)
 	pMemBlock_t block;
 	pMemBlock_t other;
 
-	block = (pMemBlock_t)((byte_t*)ptr - sizeof(MemBlock_t));
-
+	block = (pMemBlock_t)((byte_t*)ptr - sizeof(MemBlock_t));	
 	Assert(block->ID == MEM_ID, "HFree: Invalid memory release.\n");
 
 	if (IsPointer(block->User))
@@ -77,6 +77,8 @@ void __fastcall HFree(pHeap_t heap, void* ptr)
 	block->ID = 0;
 
 	other = block->Prev;
+
+	SpinlockAcquire(&heap->bLock);
 
 	if (!other->User)
 	{
@@ -105,6 +107,7 @@ void __fastcall HFree(pHeap_t heap, void* ptr)
 			MainHeap->Rover = block;
 		}
 	}
+	SpinlockRelease(&heap->bLock);
 }
 
 #define MINFRAGMENT 128
@@ -124,7 +127,8 @@ void* __fastcall HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
 	if (!base->Prev->User) { base = base->Prev; }
 
 	rover = start = base;
-
+	SpinlockAcquire(&heap->bLock);
+	
 	do
 	{
 		if (bFirst == False && rover == start)
@@ -190,6 +194,8 @@ void* __fastcall HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
 	heap->Rover = base->Next;
 
 	base->ID = MEM_ID;
+
+	SpinlockRelease(&heap->bLock);
 	return (byte_t*)base + sizeof(MemBlock_t);
 }
 
