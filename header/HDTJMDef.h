@@ -1,10 +1,10 @@
 #pragma once
+#ifndef HDTJMDEF_H
+#define HDTJMDEF_H
+
 #include <math.h>
 
 #include "HDTJMType.h"
-
-#if !defined(HDTJMDEF_H)
-#define HDTJMDEF_H
 
 #define EPSILON_F 1.19e-07F
 
@@ -17,6 +17,7 @@
 // x86
 #define GetAlignedSize(size) ((size + 3) & ~3)
 #endif
+#define GetAlgignedSizeForGPU(size) ((size + 15) & ~ 15)
 
 #define IsPointer(ptr) ((Word_t)ptr >= (Word_t)0x10000)
 

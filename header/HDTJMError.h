@@ -1,8 +1,8 @@
 #pragma once
-#include <assert.h>
-
-#if !defined(HDTJMERROR_H)
+#ifndef HDTJMERROR_H
 #define HDTJMERROR_H
+
+#include <assert.h>
 
 #define Assert(condition, message) assert(condition && message)
 

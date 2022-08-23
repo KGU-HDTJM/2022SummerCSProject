@@ -1,6 +1,5 @@
 #pragma once
-
-#if !defined(LINEARALGEBRA_H)
+#ifndef LINEARALGEBRA_H
 #define LINEARALGEBRA_H
 
 #if defined LINEAR_ALGEBRA_EXPORTS
@@ -240,7 +239,7 @@ typedef struct
 	(v).X / scalar, (v).Y / scalar, (v).Z / scalar, (v).W\
 })
 
-// Matrix4_t È£È¯µÊ
+// Matrix4_t È£È¯ï¿½ï¿½
 #define Det3(mat3) ( (float)\
 (\
 	((mat3)._11 * ((mat3)._22 * (mat3)._33 - (mat3)._23 * (mat3)._32))\
@@ -256,14 +255,14 @@ typedef struct
 	- ((mat4)._14 * ((mat4)._23 * (mat4)._32 * (mat4)._41 - (mat4)._21 * (mat4)_32 * (mat4)._43))\
 ) )
 
-/* 4Â÷¿ø º¤ÅÍ¶û 4 x 4 Çà·Ä »ç½Ç»ó 3Â÷¿ø º¤ÅÍ¿Í 3 x 3 Çà·Ä ¿¬»êÀÓ, Çà·Ä °ö »©°í */
-extern LINEAR_ALGEBRA_API Vector3f_t __cdecl Cross3f(const Vector3f_t* a, const Vector3f_t* b);
-extern LINEAR_ALGEBRA_API Vector4f_t __cdecl Cross4f(const Vector4f_t* a, const Vector4f_t* b);
-extern LINEAR_ALGEBRA_API Vector3f_t __cdecl Normalize3(const Vector3f_t* a);
-extern LINEAR_ALGEBRA_API Vector4f_t __cdecl Normalize4(const Vector4f_t* a);
-extern LINEAR_ALGEBRA_API Matrix3_t __cdecl MulMatrix3(const Matrix3_t* mA, const Matrix3_t* mB);
-extern LINEAR_ALGEBRA_API Matrix4_t __cdecl MulMatrix4(const Matrix4_t* mA, const Matrix4_t* mB);
-extern LINEAR_ALGEBRA_API void __cdecl MulVectorMatrix3(Vector3f_t* out, const Vector3f_t* arr, size_t length, const Matrix3_t* m);
-extern LINEAR_ALGEBRA_API void __cdecl MulVectorMatrix4(Vector4f_t* out, const Vector4f_t* arr, size_t length, const Matrix4_t* m);
+/* 4ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Í¶ï¿½ 4 x 4 ï¿½ï¿½ï¿½ ï¿½ï¿½Ç»ï¿½ 3ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Í¿ï¿½ 3 x 3 ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */
+extern LINEAR_ALGEBRA_API Vector3f_t __fastcall Cross3f(const Vector3f_t* a, const Vector3f_t* b);
+extern LINEAR_ALGEBRA_API Vector4f_t __fastcall Cross4f(const Vector4f_t* a, const Vector4f_t* b);
+extern LINEAR_ALGEBRA_API Vector3f_t __fastcall Normalize3(const Vector3f_t* a);
+extern LINEAR_ALGEBRA_API Vector4f_t __fastcall Normalize4(const Vector4f_t* a);
+extern LINEAR_ALGEBRA_API Matrix3_t __fastcall MulMatrix3(const Matrix3_t* mA, const Matrix3_t* mB);
+extern LINEAR_ALGEBRA_API Matrix4_t __fastcall MulMatrix4(const Matrix4_t* mA, const Matrix4_t* mB);
+extern LINEAR_ALGEBRA_API void __fastcall MulVectorMatrix3(Vector3f_t* out, const Vector3f_t* arr, size_t length, const Matrix3_t* m);
+extern LINEAR_ALGEBRA_API void __fastcall MulVectorMatrix4(Vector4f_t* out, const Vector4f_t* arr, size_t length, const Matrix4_t* m);
 
 #endif
