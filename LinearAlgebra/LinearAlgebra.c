@@ -1,9 +1,10 @@
 #include <math.h>
 
+#include "HDTJMDef.h"
 #define LINEAR_ALGEBRA_EXPORTS
 #include "LinearAlgebra.h"
 
-Vector3f_t __cdecl Cross3f(const Vector3f_t* a, const Vector3f_t* b)
+Vector3f_t __fastcall Cross3f(const Vector3f_t* a, const Vector3f_t* b)
 {
 	Vector3f_t n = GetVector3f(
 		(a->Y * b->Z) - (a->Z * b->Y),
@@ -14,7 +15,7 @@ Vector3f_t __cdecl Cross3f(const Vector3f_t* a, const Vector3f_t* b)
 	return n;
 }
 
-Vector4f_t __cdecl Cross4f(const Vector4f_t* a, const Vector4f_t* b)
+Vector4f_t __fastcall Cross4f(const Vector4f_t* a, const Vector4f_t* b)
 {
 	Vector4f_t n = GetVector4f(
 		(a->Y * b->Z) - (a->Z * b->Y),
@@ -26,19 +27,23 @@ Vector4f_t __cdecl Cross4f(const Vector4f_t* a, const Vector4f_t* b)
 	return n;
 }
 
-Vector3f_t __cdecl Normalize3(const Vector3f_t* a)
+Vector3f_t __fastcall Normalize3(const Vector3f_t* a)
 {
-	return DivScalar3f(sqrt(Dot3f(*a, *a)), *a);
+	float scalar = sqrtf(Dot3f(*a, *a));
+	return DivScalar3f(scalar, *a);
 }
 
-Vector4f_t __cdecl Normalize4(const Vector4f_t* a)
+Vector4f_t __fastcall Normalize4(const Vector4f_t* a)
 {
-	return DivScalar4f(sqrt(Dot4f(*a, *a)), *a);
+	float scalar = sqrtf(Dot3f(*a, *a));
+	Vector4f_t result = DivScalar4f(scalar, *a);
+	result.W = (float)(!FloatEqual(result.W, 0.F));
+	return result;
 }
 
-Matrix3_t __cdecl MulMatrix3(const Matrix3_t* mA, const Matrix3_t* mB)
+Matrix3_t __fastcall MulMatrix3(const Matrix3_t* mA, const Matrix3_t* mB)
 {
-	Matrix3_t result;
+	Matrix3_t result = { 0, };
 
 	for (size_t i = 0; i < 3; i++)
 	{
@@ -47,7 +52,7 @@ Matrix3_t __cdecl MulMatrix3(const Matrix3_t* mA, const Matrix3_t* mB)
 			result.M[j][i] = 0;
 			for (size_t k = 0; k < 3; k++)
 			{
-				result.M[i][j] += mA->M[i][k] * mB->M[k][j];
+				result.M[i][j] += mA->M[k][j] * mB->M[i][k];
 			}
 		}
 	}
@@ -55,9 +60,9 @@ Matrix3_t __cdecl MulMatrix3(const Matrix3_t* mA, const Matrix3_t* mB)
 	return result;
 }
 
-Matrix4_t __cdecl MulMatrix4(const Matrix4_t* mA, const Matrix4_t* mB)
+Matrix4_t __fastcall MulMatrix4(const Matrix4_t* mA, const Matrix4_t* mB)
 {
-	Matrix4_t result;
+	Matrix4_t result = { 0, };
 	for (size_t i = 0; i < 4; i++)
 	{
 		for (size_t j = 0; j < 4; j++)
@@ -73,12 +78,12 @@ Matrix4_t __cdecl MulMatrix4(const Matrix4_t* mA, const Matrix4_t* mB)
 	return result;
 }
 
-void __cdecl MulVectorMatrix3(Vector3f_t* out, const Vector3f_t* arr, unsigned long long length, const Matrix3_t* m)
+void __fastcall MulVectorMatrix3(Vector3f_t* out, const Vector3f_t* arr, size_t length, const Matrix3_t* m)
 {
 	if (out == arr)
 	{
 		Vector3f_t temp;
-		for (size_t i = 0; i < length; i++)
+		for (size_t i = 0; i < length; i++)	
 		{
 			temp = arr[i];
 			for (size_t j = 0; j < 3; j++)
@@ -107,7 +112,7 @@ void __cdecl MulVectorMatrix3(Vector3f_t* out, const Vector3f_t* arr, unsigned l
 	}
 }
 
-void __cdecl MulVectorMatrix4(Vector4f_t* out, const Vector4f_t* arr, unsigned long long length, const Matrix4_t* m)
+void __fastcall MulVectorMatrix4(Vector4f_t* out, const Vector4f_t* arr, size_t length, const Matrix4_t* m)
 {
 	if (out == arr)
 	{
