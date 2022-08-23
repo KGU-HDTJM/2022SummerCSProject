@@ -7,13 +7,9 @@
 #include "HeapAlloc.h"
 
 #if defined(STACK_ALLOCATION_EXPORTS)
-
 #define STACK_API __declspec(dllexport)
-
 #else
-
 #define STACK_API __declspec(dllimport)
-
 #endif
 
 

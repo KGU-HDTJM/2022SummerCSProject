@@ -11,11 +11,13 @@
 #define HEAP_API __declspec(dllimport)
 #endif
 
+#define CREATE_HEAP_SUCCESS 0
+
 typedef struct MemBlock_s
 {
 	size_t	Size;
 	void** User;
-	boolean_t bIsCache;
+	boolean_t bCache;
 
 	int		ID; // Canary Value
 	struct MemBlock_s* Next, * Prev;
@@ -24,7 +26,7 @@ typedef struct MemBlock_s
 typedef struct
 {
 	size_t Size;
-	boolean_t bLock;
+	boolean_t bLocked;
 	MemBlock_t BlockList;
 	MemBlock_t* Rover;
 } Heap_t, * pHeap_t;

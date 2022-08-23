@@ -17,6 +17,7 @@
 // x86
 #define GetAlignedSize(size) ((size + 3) & ~3)
 #endif
+#define GetAlgignedSizeForGPU(size) ((size + 15) & ~ 15)
 
 #define IsPointer(ptr) ((Word_t)ptr >= (Word_t)0x10000)
 

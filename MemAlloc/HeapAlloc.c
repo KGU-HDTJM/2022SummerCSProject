@@ -20,12 +20,12 @@ pHeap_t __fastcall InitSubMem(void* buf, size_t size)
 	if (buf == NULL) { return NULL; }
 	result = buf;
 	result->Size = size;
-
+	result->bLocked = False;
 	result->BlockList.Next = result->BlockList.Prev
 		= block = (pMemBlock_t)((byte_t*)result + sizeof(Heap_t));
 
 	result->BlockList.User = (void*)result;
-	result->BlockList.bIsCache = False;
+	result->BlockList.bCache = False;
 	result->Rover = block;
 
 	block->Prev = block->Next = &result->BlockList;
@@ -40,7 +40,7 @@ int __fastcall InitMem(size_t heapSize)
 {
 	const size_t size = GetAlignedSize(heapSize + sizeof(Heap_t));
 	MainHeap = InitSubMem(malloc(size), size);
-	return MainHeap != NULL;
+	return MainHeap == NULL;
 }
 
 void __fastcall ClearHeap(pHeap_t heapOrNULL)
@@ -50,7 +50,7 @@ void __fastcall ClearHeap(pHeap_t heapOrNULL)
 	heapOrNULL->BlockList.Next = heapOrNULL->BlockList.Prev
 		= block = (pMemBlock_t)((byte_t*)heapOrNULL + sizeof(heapOrNULL));
 	heapOrNULL->BlockList.User = (void*)heapOrNULL;
-	heapOrNULL->BlockList.bIsCache = False;
+	heapOrNULL->BlockList.bCache = False;
 	heapOrNULL->Rover = block;
 
 	block->Prev = block->Next = &heapOrNULL->BlockList;
@@ -73,12 +73,12 @@ void __fastcall _HFree(pHeap_t heap, void* ptr)
 	}
 
 	block->User = NULL;
-	block->bIsCache = False;
+	block->bCache = False;
 	block->ID = 0;
 
 	other = block->Prev;
 	if (heap == NULL) { heap = MainHeap; }
-	SpinlockAcquire(&heap->bLock);
+	SpinlockAcquire(&heap->bLocked);
 
 	if (!other->User)
 	{
@@ -107,7 +107,7 @@ void __fastcall _HFree(pHeap_t heap, void* ptr)
 			MainHeap->Rover = block;
 		}
 	}
-	SpinlockRelease(&heap->bLock);
+	SpinlockRelease(&heap->bLocked);
 }
 
 #define MINFRAGMENT 128
@@ -122,7 +122,7 @@ void* __fastcall _HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user
 
 	size = GetAlignedSize(size) + sizeof(MemBlock_t);
 	if (heap == NULL) { heap = MainHeap; }
-	SpinlockAcquire(&heap->bLock);
+	SpinlockAcquire(&heap->bLocked);
 	base = heap->Rover;
 
 	if (!base->Prev->User) { base = base->Prev; }
@@ -142,7 +142,7 @@ void* __fastcall _HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user
 
 		if (rover->User)
 		{
-			if (rover->bIsCache)
+			if (rover->bCache)
 			{
 				base = base->Prev;
 				_HFree(heap, (byte_t*)rover + sizeof(MemBlock_t));
@@ -167,7 +167,7 @@ void* __fastcall _HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user
 		newBlock->Size = extra;
 
 		newBlock->User = NULL;
-		newBlock->bIsCache = False;
+		newBlock->bCache = False;
 		newBlock->Prev = base;
 		newBlock->Next = base->Next;
 		newBlock->Next->Prev = newBlock;
@@ -190,13 +190,13 @@ void* __fastcall _HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user
 		}
 		base->User = (void*)2;
 	}
-	base->bIsCache = bCache;
+	base->bCache = bCache;
 
 	heap->Rover = base->Next;
 
 	base->ID = MEM_ID;
 
-	SpinlockRelease(&heap->bLock);
+	SpinlockRelease(&heap->bLocked);
 	return (byte_t*)base + sizeof(MemBlock_t);
 }
 
@@ -216,7 +216,7 @@ void __fastcall DumpHeap(pHeap_t heapOrNULL)
 	{
 		printf("block: %p\tsize:%8llu\tuser: %p\tbIsCache: %c\n",
 			block, block->Size, block->User,
-			0x46 + 0xe * block->bIsCache);
+			0x46 + 0xe * block->bCache);
 
 		if (block->Next == &heapOrNULL->BlockList)
 		{
@@ -253,7 +253,7 @@ void __fastcall DumpHeapFile(FILE* fp, pHeap_t heapOrNULL)
 	{
 		fprintf(fp, "block: %p\tsize:%8llu\tuser: %p\tbIsCache: %c\n",
 			block, block->Size, block->User,
-			0x46 + 0xe * block->bIsCache);
+			0x46 + 0xe * block->bCache);
 
 		if (block->Next == &heapOrNULL->BlockList)
 		{
@@ -310,7 +310,7 @@ size_t __fastcall GetFreeMemSize(pHeap_t heapOrNULL)
 		block != &heapOrNULL->BlockList;
 		block = block->Next)
 	{
-		if (!block->User || block->bIsCache)
+		if (!block->User || block->bCache)
 		{
 			result += block->Size;
 		}
