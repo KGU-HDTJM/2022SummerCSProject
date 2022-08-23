@@ -44,11 +44,14 @@ static cl_kernel KernelCro = NULL;
 static cl_kernel KernelTest = NULL;
 static cl_float4* Vector;
 static cl_float4* Matrix;
-static cl_float4* Result;        
+static cl_float4* Result;
 static cl_mem RBuffers[4];
 static cl_mem WBuffers[4];
 static ClMemMangeData_t SubBuffers[8];
 static MainBuffer MainB[8];
+
+static cl_kernel KernelAdd = NULL;
+static cl_int* a, * b, * result;
 
 cl_float4* SetVectorSize(int size)
 {
@@ -96,11 +99,7 @@ void Setup(void)
 		FAIL_DEVICE
 	);
 
-	cl_uint maxbuffersize = 0; 
-	clGetDeviceInfo(DeviceID, CL_DEVICE_MAX_MEM_ALLOC_SIZE, NULL, NULL, &maxbuffersize);
-	printf("%u", maxbuffersize);
-
-	fp = fopen("KingWnagjjangKernel.cl", "r");
+	fp = fopen("test.cl", "r");
 	if (!fp)
 	{
 		fprintf(stderr, "Failed to load kernel.\n");
@@ -147,6 +146,7 @@ void Setup(void)
 	KernelNor = clCreateKernel(Program, "Normalization", &status);
 	KernelMul = clCreateKernel(Program, "Cross", &status);
 	KernelMul = clCreateKernel(Program, "MulMatrix", &status);
+	KernelAdd = clCreateKernel(Program, "Add", &status);
 
 	RBuffers[0] = clCreateBuffer(Context, CL_MEM_READ_ONLY, MAX_CL_BUFFER_SIZE, NULL, &status);
 	RBuffers[1] = clCreateBuffer(Context, CL_MEM_READ_ONLY, MAX_CL_BUFFER_SIZE, NULL, &status);
@@ -157,7 +157,7 @@ void Setup(void)
 	WBuffers[2] = clCreateBuffer(Context, CL_MEM_WRITE_ONLY, MAX_CL_BUFFER_SIZE, NULL, &status);
 	WBuffers[3] = clCreateBuffer(Context, CL_MEM_WRITE_ONLY, MAX_CL_BUFFER_SIZE, NULL, &status);
 
-	for (int i = 0; i < 4; i++) 
+	for (int i = 0; i < 4; i++)
 	{
 		MainB[i].Buffer = RBuffers[i];
 		MainB[i + 4].Buffer = WBuffers[i];
@@ -195,7 +195,7 @@ void Shutdown(void)
 	clReleaseCommandQueue(CommandQueue);
 	clReleaseContext(Context);
 }
-int *BufferIdentification(cl_mem* buffer, eCLBufferType_t type)
+int* BufferIdentification(cl_mem* buffer, eCLBufferType_t type)
 {
 	cl_mem* buf;
 	int key = 0;
@@ -221,7 +221,7 @@ int *BufferIdentification(cl_mem* buffer, eCLBufferType_t type)
 	}
 	return key;
 }
-int *BufferActivateCheck(cl_mem* buffer, eCLBufferType_t type)
+int* BufferActivateCheck(cl_mem* buffer, eCLBufferType_t type)
 {
 	int key = BufferIdentification(buffer, type);
 	int ret = 0, num = 0;
@@ -252,10 +252,10 @@ cl_mem* SubBufferAlloc(cl_mem* buffer, size_t size, eCLBufferType_t type)
 	int max = subMaxSize[key1] * sizeof(cl_float4) * SUB_UNIT;
 
 	MainB[key1].Regions.origin = subStateTable[key1] * sizeof(cl_float4) * SUB_UNIT;
-
-	for (int i = 0; alingedSize > size; i++) 
-	{ 
-		alingedSize *= 2; 
+	
+	for (int i = 0; alingedSize > size; i++)
+	{
+		alingedSize *= 2;
 	}
 	if (alingedSize > max || subStateTable[key1] == -1)
 	{
@@ -266,9 +266,9 @@ cl_mem* SubBufferAlloc(cl_mem* buffer, size_t size, eCLBufferType_t type)
 		}
 		SubBufferAlloc(size, MainB[key1 + 1].Buffer, type);
 	}
-	
+
 	MainB[key1].Regions.size = alingedSize;
-	
+
 	for (int i = 3, j = 1; SUB_UNIT * j <= alingedSize; i--, j++)
 	{
 		MainB[key1].bActivated[i] = 1;
@@ -308,76 +308,110 @@ void SubBufferFree(cl_mem* buffer, eCLBufferType_t type)
 	}
 }
 
-void Normalization(cl_mem* wb, cl_mem* rb, int length)
+//void Normalization(cl_mem* wb, cl_mem* rb, int length)
+//{
+//	size_t offset = 0, globalSize = 0, localSize = 0;
+//
+//	clSetKernelArg(KernelNor, 0, sizeof(cl_mem), &wb);
+//	clSetKernelArg(KernelNor, 1, sizeof(cl_mem), &rb);
+//	clEnqueueNDRangeKernel(
+//		CommandQueue,
+//		KernelNor,
+//		1,
+//		&offset,
+//		&globalSize,
+//		&localSize,
+//		0,
+//		NULL,
+//		NULL
+//	);
+//	clEnqueueReadBuffer(CommandQueue, );
+//}
+//void Cross(cl_mem* wb, int length, int figure, cl_mem* rb)
+//{
+//	size_t offset = 0, globalSize = 0, localSize = 0;
+//	
+//	clSetKernelArg(KernelCro, 0, sizeof(cl_mem), &wb);
+//	clSetKernelArg(KernelCro, 1, sizeof(int), &figure);
+//	clSetKernelArg(KernelCro, 2, sizeof(cl_mem), *rb);
+//	clEnqueueNDRangeKernel(
+//		CommandQueue,
+//		KernelCro,
+//		1,
+//		&offset,
+//		&globalSize,
+//		&localSize,
+//		0,
+//		NULL,
+//		NULL
+//	);
+//}
+//void MulMatirx(cl_mem* wb1, int vlen, cl_mem* wb2, int mlen, cl_mem* rb)
+//{
+//	// 글로벌 사이즈랑 로컬 사이즈 정해줘야 함.
+//	size_t offset = 0, globalSize = 0, localSize = 0;
+//	
+//	clSetKernelArg(KernelMul, 0, sizeof(cl_mem), &wb1);
+//	clSetKernelArg(KernelMul, 1, sizeof(cl_mem), &wb2);
+//	clSetKernelArg(KernelMul, 2, sizeof(cl_mem), *rb);
+//	clEnqueueNDRangeKernel(
+//		CommandQueue,
+//		KernelMul,
+//		1,
+//		&offset,
+//		&globalSize,
+//		&localSize,
+//		0,
+//		NULL,
+//		NULL
+//	);
+//}
+//// 4 * 1벡터에 4 * 4행렬이 들어옴. 연산결과는
+
+void Add(int* a, int* b, int* result, int length)
 {
-	// 글로벌 사이즈랑 로컬 사이즈 정해줘야 함.
 	size_t offset = 0, globalSize = 0, localSize = 0;
-	clSetKernelArg(KernelNor, 0, sizeof(cl_mem), &wb);
-	/*clSetKernelArg(KernelNor, 1, sizeof(cl_float4) * length, NULL);
-	clSetKernelArg(KernelNor, 1, sizeof(int), length);*/
-	clSetKernelArg(KernelNor, 1, sizeof(cl_mem), &rb);
-	clEnqueueNDRangeKernel(
-		CommandQueue,
-		KernelNor,
-		1,
-		&offset,
-		&globalSize,
-		&localSize,
-		0,
-		NULL,
-		NULL
-	);
+	cl_mem subR = SubBufferAlloc(RBuffers[0], sizeof(result), CLReadBuf);
+	cl_mem subW1= SubBufferAlloc(WBuffers[0], sizeof(a), CLWriteBuf);
+	cl_mem subW2 = SubBufferAlloc(WBuffers[1], sizeof(b), CLWriteBuf);
+
+	clEnqueueWriteBuffer(CommandQueue, subW1, CL_TRUE, 0, sizeof(int) * length, a, 0, NULL, NULL);
+	clEnqueueWriteBuffer(CommandQueue, subW2, CL_TRUE, 0, sizeof(int) * length, b, 0, NULL, NULL);
+	clSetKernelArg(KernelAdd, 0, sizeof(cl_mem), &subW1);
+	clSetKernelArg(KernelAdd, 1, sizeof(cl_mem), &subW2);
+	clSetKernelArg(KernelAdd, 2, sizeof(cl_mem), &subR);
+	globalSize = 1;
+	localSize = 1;
+	for (int i = 0; i < length; i++)
+	{
+		clEnqueueNDRangeKernel(CommandQueue, KernelAdd, 1, &offset, &globalSize, &localSize, 0, NULL, NULL);
+		offset++;
+	}
+	clEnqueueReadBuffer(CommandQueue, subR, CL_TRUE, 0, sizeof(int) * length, result, 0, NULL, NULL);
+
+	SubBufferFree(subW1, CLWriteBuf);
+	SubBufferFree(subW2, CLWriteBuf);
+	SubBufferFree(subR, CLReadBuf);
 }
-void Cross(cl_mem* wb, int length, int figure, cl_mem* rb)
-{
-	// 글로벌 사이즈랑 로컬 사이즈 정해줘야 함.
-	size_t offset = 0, globalSize = 0, localSize = 0;
-	clSetKernelArg(KernelCro, 0, sizeof(cl_mem), &wb);
-	//clSetKernelArg(KernelCro, 1, sizeof(cl_float4) * length, NULL);
-	//clSetKernelArg(KernelCro, 1, sizeof(int), &length);
-	clSetKernelArg(KernelCro, 1, sizeof(int), &figure);
-	clSetKernelArg(KernelCro, 2, sizeof(cl_mem), *rb);
-	clEnqueueNDRangeKernel(
-		CommandQueue,
-		KernelCro,
-		1,
-		&offset,
-		&globalSize,
-		&localSize,
-		0,
-		NULL,
-		NULL
-	);
-}
-void MulMatirx(cl_mem* wb1, int vlen, cl_mem* wb2, int mlen, cl_mem* rb)
-{
-	// 글로벌 사이즈랑 로컬 사이즈 정해줘야 함.
-	size_t offset = 0, globalSize = 0, localSize = 0;
-	clSetKernelArg(KernelMul, 0, sizeof(cl_mem), &wb1);
-	clSetKernelArg(KernelMul, 1, sizeof(cl_mem), &wb2);
-	/*clSetKernelArg(KernelNor, 2, sizeof(cl_float4) * vlen, NULL);
-	clSetKernelArg(KernelNor, 2, sizeof(int),vlen);
-	clSetKernelArg(KernelNor, 3, sizeof(cl_float4) * mlen, NULL);
-	clSetKernelArg(KernelNor, 3, sizeof(int) ,mlen);*/
-	clSetKernelArg(KernelMul, 2, sizeof(cl_mem), *rb);
-	clEnqueueNDRangeKernel(
-		CommandQueue,
-		KernelMul,
-		1,
-		&offset,
-		&globalSize,
-		&localSize,
-		0,
-		NULL,
-		NULL
-	);
-}
-// 4 * 1벡터에 4 * 4행렬이 들어옴. 연산결과는
 
 int main(void)
 {
 	Setup();
-	
+	a = (int*)malloc(sizeof(int) * 4);
+	b = (int*)malloc(sizeof(int) * 4);
+	result = (int*)malloc(sizeof(int) * 4);
+
+	for (int i = 0; i < 4; i++)
+	{
+		a[i] = i;
+		b[i] = i + 1;
+	}
+
+	Add(a, b, result, 4);
+	for (int i = 0; i < 4; i++)
+	{
+		printf("result[%d] = %d\n",i+1 , result[i]);
+	}
 	Shutdown();
 	return 0;
 }
