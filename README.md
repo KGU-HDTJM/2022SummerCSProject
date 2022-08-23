@@ -26,7 +26,7 @@ git repo, 개발 프로세스 관리, 라이브러리 개발, OpenCL, GLSL 코�
 ## D(다현)
 모델링, file io 관련 기능
 ## T(태윤)
-NULL
+게임구현
 ## J(재민)
 git repo 관리, opengl 그래픽스
 ## M(민재)
