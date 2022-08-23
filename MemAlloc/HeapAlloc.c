@@ -36,36 +36,36 @@ pHeap_t __fastcall InitSubMem(void* buf, size_t size)
 	return result;
 }
 
-pHeap_t __fastcall InitMem(size_t heapSize)
+int __fastcall InitMem(size_t heapSize)
 {
 	const size_t size = GetAlignedSize(heapSize + sizeof(Heap_t));
 	MainHeap = InitSubMem(malloc(size), size);
-	return MainHeap;
+	return MainHeap != NULL;
 }
 
-void __fastcall ClearHeap(pHeap_t heap)
+void __fastcall ClearHeap(pHeap_t heapOrNULL)
 {
 	pMemBlock_t block;
 
-	heap->BlockList.Next = heap->BlockList.Prev
-		= block = (pMemBlock_t)((byte_t*)heap + sizeof(Heap_t));
-	heap->BlockList.User = (void*)heap;
-	heap->BlockList.bIsCache = False;
-	heap->Rover = block;
+	heapOrNULL->BlockList.Next = heapOrNULL->BlockList.Prev
+		= block = (pMemBlock_t)((byte_t*)heapOrNULL + sizeof(heapOrNULL));
+	heapOrNULL->BlockList.User = (void*)heapOrNULL;
+	heapOrNULL->BlockList.bIsCache = False;
+	heapOrNULL->Rover = block;
 
-	block->Prev = block->Next = &heap->BlockList;
+	block->Prev = block->Next = &heapOrNULL->BlockList;
 
 	block->User = NULL;
-	block->Size = heap->Size - sizeof(Heap_t);
+	block->Size = heapOrNULL->Size - sizeof(heapOrNULL);
 }
 
-void __fastcall HFree(pHeap_t heap, void* ptr)
+void __fastcall _HFree(pHeap_t heap, void* ptr)
 {
 	pMemBlock_t block;
 	pMemBlock_t other;
 
 	block = (pMemBlock_t)((byte_t*)ptr - sizeof(MemBlock_t));	
-	Assert(block->ID == MEM_ID, "HFree: Invalid memory release.\n");
+	Assert(block->ID == MEM_ID, "_HFree: Invalid memory release.\n");
 
 	if (IsPointer(block->User))
 	{
@@ -77,7 +77,7 @@ void __fastcall HFree(pHeap_t heap, void* ptr)
 	block->ID = 0;
 
 	other = block->Prev;
-
+	if (heap == NULL) { heap = MainHeap; }
 	SpinlockAcquire(&heap->bLock);
 
 	if (!other->User)
@@ -111,7 +111,7 @@ void __fastcall HFree(pHeap_t heap, void* ptr)
 }
 
 #define MINFRAGMENT 128
-void* __fastcall HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
+void* __fastcall _HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
 {
 	size_t extra;
 	pMemBlock_t start;
@@ -121,13 +121,14 @@ void* __fastcall HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
 	boolean_t bFirst = True;
 
 	size = GetAlignedSize(size) + sizeof(MemBlock_t);
-
+	if (heap == NULL) { heap = MainHeap; }
+	SpinlockAcquire(&heap->bLock);
 	base = heap->Rover;
 
 	if (!base->Prev->User) { base = base->Prev; }
 
 	rover = start = base;
-	SpinlockAcquire(&heap->bLock);
+
 	
 	do
 	{
@@ -144,7 +145,7 @@ void* __fastcall HAlloc(pHeap_t heap, size_t size, boolean_t bCache, void* user)
 			if (rover->bIsCache)
 			{
 				base = base->Prev;
-				HFree(heap, (byte_t*)rover + sizeof(MemBlock_t));
+				_HFree(heap, (byte_t*)rover + sizeof(MemBlock_t));
 				base = base->Next;
 				rover = base->Next;
 			}
@@ -323,15 +324,15 @@ size_t __fastcall GetFreeMemSize(pHeap_t heapOrNULL)
 //{
 //	pHeap_t mem = InitMem((0x80 + sizeof(MemBlock_t)) * 5);
 //
-//	void* m0 = HAlloc(mem, 0x80, False, NULL);
-//	void* m1 = HAlloc(mem, 0x80, False, NULL);
-//	void* m2 = HAlloc(mem, 0x80, True, &m2);
-//	void* m3 = HAlloc(mem, 0x80, False, NULL);
+//	void* m0 = _HAlloc(mem, 0x80, False, NULL);
+//	void* m1 = _HAlloc(mem, 0x80, False, NULL);
+//	void* m2 = _HAlloc(mem, 0x80, True, &m2);
+//	void* m3 = _HAlloc(mem, 0x80, False, NULL);
 //	DumpHeap(mem);
 //	printf("Free space: %llu\n", GetFreeSpace(mem));
-//	HFree(mem, m1);
+//	_HFree(mem, m1);
 //	DumpHeap(mem);
-//	void* m4 = HAlloc(mem, 0x90, False, NULL);
+//	void* m4 = _HAlloc(mem, 0x90, False, NULL);
 //	DumpHeap(mem);
 //
 //	printf("Free Space: %llu\n", GetFreeSpace(mem));

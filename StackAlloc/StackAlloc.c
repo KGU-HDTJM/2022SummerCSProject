@@ -2,12 +2,12 @@
 
 #include "StackAlloc.h"
 
-pStack_t __fastcall CreateStack(pHeap_t heap, size_t size)
+pStack_t __fastcall _CreateStack(pHeap_t heap, size_t size)
 {
 	pStack_t stack;
 
 	size = GetAlignedSize(size);
-	stack = HAlloc(heap, sizeof(Stack_t) + size + 1, False, NULL);
+	stack = _HAlloc(heap, sizeof(Stack_t) + size + 1, False, NULL);
 	if (!stack) { return NULL; }
 
 	stack->BP = (byte_t*)stack + sizeof(Stack_t) + size;
@@ -16,9 +16,9 @@ pStack_t __fastcall CreateStack(pHeap_t heap, size_t size)
 	return stack;
 }
 
-void __fastcall ReleaseStack(pHeap_t heap, pStack_t stack)
+void __fastcall _ReleaseStack(pHeap_t heap, pStack_t stack)
 {
-	HFree(heap, stack);
+	_HFree(heap, stack);
 }
 
 boolean_t __fastcall StackOF(pStack_t stack)

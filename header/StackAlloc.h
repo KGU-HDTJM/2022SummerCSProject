@@ -22,8 +22,11 @@ typedef struct
 	byte_t* SP, * BP;
 } Stack_t, * pStack_t;
 
-extern STACK_API pStack_t __fastcall CreateStack(pHeap_t heap, size_t size);
-extern STACK_API void __fastcall ReleaseStack(pHeap_t heap, pStack_t stack);
+#define CreateStack(size) _CreateStack(NULL, size)
+#define ReleaseStack(stack) _ReleaseStack(NULL, stack)
+
+extern STACK_API pStack_t __fastcall _CreateStack(pHeap_t heap, size_t size);
+extern STACK_API void __fastcall _ReleaseStack(pHeap_t heap, pStack_t stack);
 extern STACK_API boolean_t __fastcall StackOF(pStack_t stack);
 extern STACK_API boolean_t __fastcall StackUF(pStack_t stack);
 // alloc
