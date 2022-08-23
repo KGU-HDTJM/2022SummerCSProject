@@ -111,6 +111,23 @@ typedef struct {
 
 
 
+GLubyte* textureMap;
+pStack_t mapBufStack;
+int voxelMode = 0;
+
+//Model View mode
+#define WIREMODE 0
+#define SOLIDMODE 1
+#define IMG_COUNT 5
+int idx = 1;
+
+typedef struct {
+	GLfloat Voxel[36][2];
+}VoxelTex_t;
+
+typedef struct {
+	GLfloat Voxel[36][5];
+}RenderModel_t;
 GLfloat eyeR = 1.8F;
 GLfloat camx, camy, camz;
 GLfloat hrzndegree = -60.0F, vrtcldegree = 60.0F;
@@ -185,25 +202,6 @@ void VertexFaceMapping(int* face, size_t facelen, Vector3f_t* vertex, Vector3f_t
 //--------------------------------------------------------------------------------------
 
 
-GLubyte* textureMap;
-
-
-pStack_t mapBufStack;
-int voxelMode = 0;
-
-//Model View mode
-#define WIREMODE 0
-#define SOLIDMODE 1
-#define IMG_COUNT 5
-int idx = 1;
-
-typedef struct {
-	GLfloat Voxel[36][2];
-}VoxelTex_t;
-
-typedef struct {
-	GLfloat Voxel[36][5]; 
-}RenderModel_t;
 void CreateTexBuffer(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, VoxelTex_t* texBuf, int imgCount);
 void LoadMapBuf(int* mapDataBuf, int sizeX, int sizeY, int sizeZ, GLfloat voxelSize, int voxelCount,
 	VoxelModel* outVoxelAddress, VoxelModel* outGridAddress, Voxel_t* voxelArr, Voxel_t* gridArr, VoxelTex_t* outTexBufAddress);
@@ -486,12 +484,16 @@ void DrawTetrisMap(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, GLfloat vox
 	mapBufStack->BP = mapBufStack->SP;
 
 	Voxel_t* voxelArr = SubSP(mapBufStack, sizeof(Voxel_t) * voxelCount);
+
 	Voxel_t* gridArr = SubSP(mapBufStack, sizeof(Voxel_t) * SizeXZY);
 
-	VoxelTex_t* textureBufAddress = SubSP(mapBufStack, sizeof(VoxelTex_t) * voxelCount);
-	VoxelModel* voxelBufAddress = SubSP(mapBufStack, sizeof(VoxelModel) * voxelCount);
-	VoxelModel* gridBufAddress = SubSP(mapBufStack, sizeof(VoxelModel) * SizeXZY);
 
+	VoxelTex_t* textureBufAddress = SubSP(mapBufStack, sizeof(VoxelTex_t) * voxelCount);
+
+	VoxelModel* voxelBufAddress = SubSP(mapBufStack, sizeof(VoxelModel) * voxelCount);
+	
+	VoxelModel* gridBufAddress = SubSP(mapBufStack, sizeof(VoxelModel) * SizeXZY);
+	
 
 	LoadMapBuf(mapDataBuf, sizeX, sizeY, sizeZ, voxelSize, voxelCount, voxelBufAddress, gridBufAddress, voxelArr, gridArr, textureBufAddress);
 
@@ -499,9 +501,11 @@ void DrawTetrisMap(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, GLfloat vox
 	RenderMap(renderBuf, mapDataBuf, voxelSize, voxelCount, gridMode, voxelMode, voxelBufAddress, gridBufAddress, textureBufAddress);
 
 	mapBufStack->SP = mapBufStack->BP;
-	mapBufStack->BP = *mapBufStack->SP;
-	(void**)Pop(mapBufStack);
+	mapBufStack->BP = *(void**)Pop(mapBufStack);
+	
 
+	
+	
 }
 //modelTracer
 void DrawControlModel(Vector3i_t* blockModel, int voxelCount, int sizeX, int sizeY, int sizeZ, int* dataBuf, float voxelSize, int textureID, int imgCount)
@@ -631,13 +635,20 @@ void ClickMouse(int button, int state, int x, int y)
 int main(int argc, char** argv)
 {
 	InitMem(1 << 30);
+	
+	SizeXZY = SizeX * SizeZ * SizeY;
+
 	mapBufStack = CreateStack(
 		(sizeof(Voxel_t) + sizeof(VoxelModel)) * SizeXZY * 5
 	);
 	
-	SizeXZY = SizeX * SizeZ * SizeY;
-	mapDataBuf = HAlloc(SizeXZY, False, NULL);
 
+	mapDataBuf = HAlloc(sizeof(int) * SizeXZY, False, NULL);
+	
+	for (int i = 0 ; i < SizeXZY ; i++)
+	{	
+		*(mapDataBuf+i) = 0;
+	}
 	srand((unsigned int)time(NULL));
 
 	glutInit(&argc, argv);
@@ -741,6 +752,7 @@ void InitTexture(unsigned char* data, int width, int height)
 
 void Display(void)
 {
+
 	//_asm int 3;
 	if (ModelY < -1) ModelY = 1;
 	FrameCount++;
@@ -765,7 +777,7 @@ void Display(void)
 
 	Update();
 	DrawControlModel(Block, SIZE_OF_BLOCK, SizeX, SizeY, SizeZ, (int*)mapDataBuf, VOXEL_SIZE, BlockNumber, IMG_COUNT);
-	DrawTetrisMap(mapDataBuf, SizeX, SizeZ, SizeY, VOXEL_SIZE);
+	DrawTetrisMap((int*)mapDataBuf, SizeX, SizeZ, SizeY, VOXEL_SIZE);
 
 
 	glFlush();
