@@ -54,29 +54,29 @@ const Vector3i_t BlockList[NUMBER_OF_BLOCKS + 1][SIZE_OF_BLOCK] =
 		{0,0,0},{0,0,0},{0,0,0},{0,0,0},
 	},
 	{
-		GetVectorXZY(0,0,9), GetVectorXZY(1,0,9),
-		GetVectorXZY(0,1,9), GetVectorXZY(1,1,9),
+		GetVectorXZY(0,0,0), GetVectorXZY(1,0,0),
+		GetVectorXZY(0,1,0), GetVectorXZY(1,1,0),
 	},					 				  
 	{					 			 
-		GetVectorXZY(0,0,9),				  
-		GetVectorXZY(0,1,9),				  
-		GetVectorXZY(0,2,9), GetVectorXZY(1,2,9),
+		GetVectorXZY(0,0,0),				  
+		GetVectorXZY(0,1,0),				  
+		GetVectorXZY(0,2,0), GetVectorXZY(1,2,0),
 	},					 				  
 	{					 				  
-		GetVectorXZY(0,0,9),				  
-		GetVectorXZY(0,1,9), GetVectorXZY(1,1,9),
-		GetVectorXZY(0,2,9),
+		GetVectorXZY(0,0,0),				  
+		GetVectorXZY(0,1,0), GetVectorXZY(1,1,0),
+		GetVectorXZY(0,2,0),
 	},
 	{
-		GetVectorXZY(0,0,9),
-		GetVectorXZY(0,1,9),
-		GetVectorXZY(0,2,9),
-		GetVectorXZY(0,3,9),
+		GetVectorXZY(0,0,0),
+		GetVectorXZY(0,1,0),
+		GetVectorXZY(0,2,0),
+		GetVectorXZY(0,3,0),
 	},					 
 	{					 
-		GetVectorXZY(0,0,9),
-		GetVectorXZY(0,1,9), GetVectorXZY(1,1,9),
-							 GetVectorXZY(1,2,9),
+		GetVectorXZY(0,0,0),
+		GetVectorXZY(0,1,0), GetVectorXZY(1,1,0),
+							 GetVectorXZY(1,2,0),
 	},
 };
 
@@ -1129,5 +1129,9 @@ void Update()
 
 		BlockNumber = rand() % NUMBER_OF_BLOCKS + 1; // 새로운 블럭을 정하고
 		SetNewBlock(Block, BlockList[BlockNumber]);
+		for (int i = 0; i < SIZE_OF_BLOCK; i++)
+		{
+			Block[i].Y = SizeY - 1;
+		}
 	}
 }
