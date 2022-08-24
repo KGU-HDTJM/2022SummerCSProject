@@ -33,17 +33,17 @@ typedef struct
 
 int inputPosX, inputPosZ, inputPosY;
 
-size_t SizeY = 10;
-size_t SizeZ = 5;
-size_t SizeX = 5;
-size_t SizeXZY;
+int SizeY = 10;
+int SizeZ = 5;
+int SizeX = 5;
+int SizeXZY;
 int* mapDataBuf;
 
 boolean_t bShouldRun = True;
 
 #define NUMBER_OF_BLOCKS 5
 #define SIZE_OF_BLOCK 4
-#define FIRST_BLOCK -1
+#define FIRST_BLOCK 0
 #define NO_SPIN_BLOCK 1
 int BlockNumber = FIRST_BLOCK;
 boolean_t bIsArrived = True;
@@ -87,15 +87,6 @@ Vector3i_t Block[SIZE_OF_BLOCK];
 #define AXIS_Y 2
 #define DIR_RIGHT 1
 #define DIR_LEFT -1
-
-const int BlockDir[4][2] =
-{
-	{+0,+1},
-	{+1,+0},
-	{+0,-1},
-	{-1,+0}
-};
-int AxisDegree[3] = { 0,0,0 };
 
 int spinAxis = AXIS_X;
 
@@ -141,6 +132,15 @@ GLfloat eyeR = 1.8F;
 GLfloat camx, camy, camz;
 GLfloat hrzndegree = -60.0F, vrtcldegree = 60.0F;
 
+typedef struct
+{
+	byte_t X;
+	byte_t Y;
+	byte_t Z;
+	byte_t TextureID;
+} VoxelInfo_t;
+
+VoxelInfo_t* drawObjectArray;
 
 void Update();
 void InitLight(void);
@@ -149,7 +149,7 @@ void Display(void);
 void Reshape(int width, int height);
 GLubyte* LoadBmp(const char* imagePath, int* width, int* height);
 void InitTexture(unsigned char* data, int width, int height);
-int GetVoxelCount(int* arr, int sizeMax);
+int GetVoxelCount(int* arr, const int sizeMax);
 
 void ReVoxelSize(Vector3f_t* tempVoxel, GLfloat size);
 void VoxelTrans(Vector3f_t* stdVoxel, Vector3f_t* tempVoxel, GLfloat x, GLfloat y, GLfloat z, GLfloat voxelSize);
@@ -170,8 +170,9 @@ boolean_t IsEnabledToMoveBlockToNextPosition(int dx, int dz, int dy, Vector3i_t*
 void FixBlockInMap(int blockNumber, Vector3i_t* block, int* arr);
 void SetNewBlock(Vector3i_t* block, const Vector3i_t* newBlock);
 
-void SpinBlock(int spinAxis, int dir, Vector3i_t* block);
+void SpinBlock(int spinAxis, int dir, Vector3i_t* block, int* arr);
 
+void PushVoxelInfo(pStack_t stack, VoxelInfo_t data);
 void PrintMap(int* map);
 
 void DrawFrame(int num)
@@ -699,9 +700,16 @@ int main(int argc, char** argv)
 
 	mapDataBuf = HAlloc(sizeof(int) * SizeXZY, False, NULL);
 	
+	/*int asdf[250] = {
+		1,1,1,1,1,
+		1,1,1,1,1,
+		1,1,1,1,1,
+		1,1,1,0,0,
+		1,1,1,0,0,
+	};*/
 	for (int i = 0 ; i < SizeXZY ; i++)
 	{	
-		*(mapDataBuf+i) = 0;
+		*(mapDataBuf+i) = 0 /*asdf[i]*/;
 	}
 	srand((unsigned int)time(NULL));
 
@@ -809,6 +817,7 @@ void InitTexture(unsigned char* data, int width, int height)
 
 void Display(void)
 {
+	clock_t i = clock();
 
 	//_asm int 3;
 	if (ModelY < -1) ModelY = 1;
@@ -842,6 +851,11 @@ void Display(void)
 
 
 	glFlush();
+
+	while (clock() - i < 6)
+	{
+		Sleep(1);
+	}
 	glutPostRedisplay();
 
 }
@@ -968,13 +982,11 @@ void Keyboard(unsigned char key, int x, int y)
 		{
 	case 'Q':
 	case 'q':
-		AxisDegree[spinAxis] = (4 + AxisDegree[spinAxis] - 1) % 4;
-		SpinBlock(spinAxis, -1, Block);
+		SpinBlock(spinAxis, -1, Block, mapDataBuf);
 		break;
 	case 'E':
 	case 'e':
-		AxisDegree[spinAxis] = (4 + AxisDegree[spinAxis] + 1) % 4;
-		SpinBlock(spinAxis, +1, Block);
+		SpinBlock(spinAxis, +1, Block, mapDataBuf);
 		break;
 		}
 		// 그 밖의 잡다한거
@@ -1034,12 +1046,16 @@ void VoxelTrans(Vector3f_t* stdVoxel, Vector3f_t* tempVoxel, GLfloat x, GLfloat 
 
 int IsFullFloor(int* arr, const int floor)
 {
+	boolean_t bIsFullFloor = True;
 	for (int i = 0; i < SizeZ * SizeX; i++)
 	{
-		if (arr[i + (SizeZ * SizeX) * floor] == 0)
-			return 0;
+		bIsFullFloor = bIsFullFloor && !!arr[i + (SizeZ * SizeX) * floor];
+		/*if (arr[i + (SizeZ * SizeX) * floor] != 0)
+		{
+			PushVoxelInfo(drawObjectArray, (VoxelInfo_t) { i% SizeX, floor, i / SizeX, arr[i + (SizeZ * SizeX) * floor] });
+		}*/
 	}
-	return 1;
+	return bIsFullFloor;
 }
 void BreakFullFloor(int* arr, const int floor)
 {
@@ -1132,12 +1148,12 @@ void SetNewBlock(Vector3i_t* block, const Vector3i_t* newBlock)
 	}
 }
 
-
-void SpinBlock(int spinAxis, int dir, Vector3i_t* block)
+void SpinBlock(int spinAxis, int dir, Vector3i_t* block, int* arr)
 {
 	const int centerBlockIdx = 1;
 	Vector3i_t centerBlock = block[centerBlockIdx];
 	Vector3i_t* distFromCenter = HAlloc(sizeof(Vector3i_t) * SIZE_OF_BLOCK, False, NULL);
+	Vector3i_t* result = HAlloc(sizeof(Vector3i_t) * SIZE_OF_BLOCK, False, NULL);
 
 	for (int i = 0; i < SIZE_OF_BLOCK; i++)
 	{
@@ -1146,8 +1162,75 @@ void SpinBlock(int spinAxis, int dir, Vector3i_t* block)
 		distFromCenter[i].Y = block[i].Y - centerBlock.Y;
 	}
 	
+		 if (spinAxis == AXIS_X)
+	{
+		for (int i = 0; i < SIZE_OF_BLOCK; i++)
+		{
+			Vector3i_t temp = distFromCenter[i];
+			distFromCenter[i].Y = temp.Z;
+			distFromCenter[i].Z = temp.Y;
+			if (dir == DIR_RIGHT)
+			{
+				distFromCenter[i].Y *= -1;
+			}
+			else if (dir == DIR_LEFT)
+			{
+				distFromCenter[i].Z *= -1;
+			}
+			int nx = centerBlock.X + distFromCenter[i].X;
+			int nz = centerBlock.Z + distFromCenter[i].Z;
+			int ny = centerBlock.Y + distFromCenter[i].Y;
 
-	if (spinAxis == AXIS_Y)
+			if (nx < 0 || nx >= SizeX || nz < 0 || nz >= SizeZ || ny < 0 || ny >= SizeY)
+			{
+				HFree(distFromCenter);
+				HFree(result);
+				return;
+			}
+			if (arr[(SizeZ * SizeX) * ny + SizeX * nz + nx] != 0)
+			{
+				HFree(distFromCenter);
+				HFree(result);
+				return;
+			}
+			result[i] = (Vector3i_t){ nx, ny, nz };
+		}
+	}
+	else if (spinAxis == AXIS_Z)
+	{
+		for (int i = 0; i < SIZE_OF_BLOCK; i++)
+		{
+			Vector3i_t temp = distFromCenter[i];
+			distFromCenter[i].X = temp.Y;
+			distFromCenter[i].Y = temp.X;
+			if (dir == DIR_RIGHT)
+			{
+				distFromCenter[i].X *= -1;
+			}
+			else if (dir == DIR_LEFT)
+			{
+				distFromCenter[i].Y *= -1;
+			}
+			int nx = centerBlock.X + distFromCenter[i].X;
+			int nz = centerBlock.Z + distFromCenter[i].Z;
+			int ny = centerBlock.Y + distFromCenter[i].Y;
+
+			if (nx < 0 || nx >= SizeX || nz < 0 || nz >= SizeZ || ny < 0 || ny >= SizeY)
+			{
+				HFree(distFromCenter);
+				HFree(result);
+				return;
+			}
+			if (arr[(SizeZ * SizeX) * ny + SizeX * nz + nx] != 0)
+			{
+				HFree(distFromCenter);
+				HFree(result);
+				return;
+			}
+			result[i] = (Vector3i_t){ nx, ny, nz };
+		}
+	}
+	else if (spinAxis == AXIS_Y)
 	{
 		for (int i = 0; i < SIZE_OF_BLOCK; i++)
 		{
@@ -1164,57 +1247,38 @@ void SpinBlock(int spinAxis, int dir, Vector3i_t* block)
 				distFromCenter[i].X *= -1;
 			}
 			
-			for (int j = 0; j < 3; j++)
-			{
-				block[i].V[j] = centerBlock.V[j] + distFromCenter[i].V[j];
-			}
-		}
-	}
-	if (spinAxis == AXIS_X)
-	{
-		for (int i = 0; i < SIZE_OF_BLOCK; i++)
-		{
-			Vector3i_t temp = distFromCenter[i];
-			distFromCenter[i].Y = temp.Z;
-			distFromCenter[i].Z = temp.Y;
-			if (dir == DIR_RIGHT)
-			{
-				distFromCenter[i].Y *= -1;
-			}
-			else if (dir == DIR_LEFT)
-			{
-				distFromCenter[i].Z *= -1;
-			}
-			for (int j = 0; j < 3; j++)
-			{
-				block[i].V[j] = centerBlock.V[j] + distFromCenter[i].V[j];
-			}
-		}
-	}
-	if (spinAxis == AXIS_Z)
-	{
-		for (int i = 0; i < SIZE_OF_BLOCK; i++)
-		{
-			Vector3i_t temp = distFromCenter[i];
-			distFromCenter[i].X = temp.Y;
-			distFromCenter[i].Y = temp.X;
-			if (dir == DIR_RIGHT)
-			{
-				distFromCenter[i].X *= -1;
-			}
-			else if (dir == DIR_LEFT)
-			{
-				distFromCenter[i].Y *= -1;
-			}
-			for (int j = 0; j < 3; j++)
-			{
-				block[i].V[j] = centerBlock.V[j] + distFromCenter[i].V[j];
-			}
-		}
-	}
+			int nx = centerBlock.X + distFromCenter[i].X;
+			int nz = centerBlock.Z + distFromCenter[i].Z;
+			int ny = centerBlock.Y + distFromCenter[i].Y;
 
-
+			if (nx < 0 || nx >= SizeX || nz < 0 || nz >= SizeZ || ny < 0 || ny >= SizeY)
+			{
+				HFree(distFromCenter);
+				HFree(result);
+				return;
+			}
+			if (arr[(SizeZ * SizeX) * ny + SizeX * nz + nx] != 0)
+			{
+				HFree(distFromCenter);
+				HFree(result);
+				return;
+			}
+			result[i] = (Vector3i_t){ nx, ny, nz };
+		}
+	}
+	
+	for (int i = 0; i < NUMBER_OF_BLOCKS; i++)
+	{
+		block[i] = result[i];
+	}
+	
 	HFree(distFromCenter);
+	HFree(result);
+}
+
+void PushVoxelInfo(pStack_t stack, VoxelInfo_t data)
+{
+	*(VoxelInfo_t*)SubSP(stack, sizeof(VoxelInfo_t)) = data;
 }
 
 void PrintMap(int* map)
@@ -1226,6 +1290,7 @@ void PrintMap(int* map)
 			for (int k = 0; k < SizeX; k++)
 			{
 				printf("%d ", map[(SizeZ * SizeX) * i + SizeX * j + k]);
+
 			}
 			printf("\n");
 		}
