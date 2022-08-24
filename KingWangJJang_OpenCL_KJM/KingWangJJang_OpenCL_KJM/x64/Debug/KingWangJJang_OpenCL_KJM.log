@@ -1,3 +1,0 @@
-﻿  Queen.c
-  cl_version.h: CL_TARGET_OPENCL_VERSION is not defined. Defaulting to 300 (OpenCL 3.0)
-C:\Users\james\OneDrive\바탕 화면\2022SummerCSProject\KingWangJJang_OpenCL_KJM\KingWangJJang_OpenCL_KJM\Queen.c(7,10): fatal  error C1083: 포함 파일을 열 수 없습니다. 'HDTJMType.h': No such file or directory
