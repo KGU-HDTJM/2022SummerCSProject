@@ -309,7 +309,7 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 
 	}
 	else {
-		
+	
 		
 		Vector2f_t texCoord[4] = {
 			{0.F, 0.F},
@@ -322,12 +322,20 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 			texBuf[i].Y = texCoord[i % 4].Y;
 		}
 		Texture = LoadBmp("../resource/GameOut.bmp", &imageWidht, &imageHeight);
+		
 		InitTexture(Texture, imageWidht, imageHeight);
 		glTexCoordPointer(2, GL_FLOAT, 0, texBuf);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		glVertexPointer(3, GL_FLOAT, 0, outGridAdress);
+	
 		glDrawArrays(GL_QUADS, 0, VOXEL_SIZE_QUADS);
+		glutSwapBuffers();
 		HFree(Texture);
+		ReleaseStack(mapBufStack);
+		DumpHeap(NULL);
+		ReleaseMainMem();
+		Sleep(3000);
+		_endthread();
 
 	}
 	 
@@ -847,7 +855,6 @@ void Display(void)
 
 	
 	DrawControlModel(Block, SIZE_OF_BLOCK, SizeX, SizeY, SizeZ, (int*)mapDataBuf, VOXEL_SIZE, BlockNumber, IMG_COUNT);
-
 	DrawTetrisMap((int*)mapDataBuf, SizeX, SizeZ, SizeY, VOXEL_SIZE);
 	DrawWorld(WORLD_MAP_SIZE , IMG_COUNT, gameLevel);
 	
