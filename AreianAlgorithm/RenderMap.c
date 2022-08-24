@@ -56,7 +56,7 @@ const Vector3i_t BlockList[NUMBER_OF_BLOCKS + 1][SIZE_OF_BLOCK] =
 	{
 		GetVectorXZY(0,0,0), GetVectorXZY(1,0,0),
 		GetVectorXZY(0,1,0), GetVectorXZY(1,1,0),
-	},					 				  
+	},					 			  
 	{					 			 
 		GetVectorXZY(0,0,0),				  
 		GetVectorXZY(0,1,0),				  
@@ -87,6 +87,15 @@ Vector3i_t Block[SIZE_OF_BLOCK];
 #define AXIS_Y 2
 #define DIR_RIGHT 1
 #define DIR_LEFT -1
+
+const int BlockDir[4][2] =
+{
+	{+0,+1},
+	{+1,+0},
+	{+0,-1},
+	{-1,+0}
+};
+int AxisDegree[3] = { 0,0,0 };
 
 int spinAxis = AXIS_X;
 
@@ -161,8 +170,7 @@ boolean_t IsEnabledToMoveBlockToNextPosition(int dx, int dz, int dy, Vector3i_t*
 void FixBlockInMap(int blockNumber, Vector3i_t* block, int* arr);
 void SetNewBlock(Vector3i_t* block, const Vector3i_t* newBlock);
 
-Vector3i_t GetCentroid(Vector3i_t* block);
-void SpinBlock(int spinAxis, int dir, int blockNumber, Vector3i_t* block);
+void SpinBlock(int spinAxis, int dir, Vector3i_t* block);
 
 void PrintMap(int* map);
 
@@ -907,13 +915,17 @@ void Keyboard(unsigned char key, int x, int y)
 		{
 	case 'Q':
 	case 'q':
-		SpinBlock(spinAxis, -1, BlockNumber, Block);
+		AxisDegree[spinAxis] = (4 + AxisDegree[spinAxis] - 1) % 4;
+		SpinBlock(spinAxis, -1, Block);
 		break;
 	case 'E':
 	case 'e':
-		SpinBlock(spinAxis, 1, BlockNumber, Block);
+		AxisDegree[spinAxis] = (4 + AxisDegree[spinAxis] + 1) % 4;
+		SpinBlock(spinAxis, +1, Block);
 		break;
 		}
+		// 그 밖의 잡다한거
+		{
 	case 'v':
 		voxelMode = (voxelMode + 1) % 2;
 		break;
@@ -931,6 +943,8 @@ void Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'p':
 		printf("%d\n", GetVoxelCount(mapDataBuf, SizeXZY));
+		}
+
 
 	default:
 		break;
@@ -1065,31 +1079,89 @@ void SetNewBlock(Vector3i_t* block, const Vector3i_t* newBlock)
 	}
 }
 
-Vector3i_t GetCentroid(Vector3i_t* block)
+
+void SpinBlock(int spinAxis, int dir, Vector3i_t* block)
 {
-	Vector3i_t centroid = { 0,0,0 };
+	const int centerBlockIdx = 1;
+	Vector3i_t centerBlock = block[centerBlockIdx];
+	Vector3i_t* distFromCenter = HAlloc(sizeof(Vector3i_t) * SIZE_OF_BLOCK, False, NULL);
+
 	for (int i = 0; i < SIZE_OF_BLOCK; i++)
 	{
-		centroid.X += block[i].X;
-		centroid.Z += block[i].Z;
-		centroid.Y += block[i].Y;
+		distFromCenter[i].X = block[i].X - centerBlock.X;
+		distFromCenter[i].Z = block[i].Z - centerBlock.Z;
+		distFromCenter[i].Y = block[i].Y - centerBlock.Y;
 	}
-	for (int i = 0; i < sizeof(Vector3i_t) / sizeof(int); i++)
-	{
-		centroid.V[i] /= SIZE_OF_BLOCK;
-	}
-	return centroid;
-}
-void SpinBlock(int spinAxis, int dir, int blockNumber, Vector3i_t* block)
-{
-	Vector3i_t centroid = GetCentroid(block);
+	
+
 	if (spinAxis == AXIS_Y)
 	{
-		if (dir == DIR_RIGHT)
+		for (int i = 0; i < SIZE_OF_BLOCK; i++)
 		{
+			Vector3i_t temp = distFromCenter[i];
+			distFromCenter[i].Z = temp.X;
+			distFromCenter[i].X = temp.Z;
 
+			if (dir == DIR_LEFT)
+			{
+				distFromCenter[i].Z *= -1;
+			}
+			else if (dir == DIR_RIGHT)
+			{
+				distFromCenter[i].X *= -1;
+			}
+			
+			for (int j = 0; j < 3; j++)
+			{
+				block[i].V[j] = centerBlock.V[j] + distFromCenter[i].V[j];
+			}
 		}
 	}
+	if (spinAxis == AXIS_X)
+	{
+		for (int i = 0; i < SIZE_OF_BLOCK; i++)
+		{
+			Vector3i_t temp = distFromCenter[i];
+			distFromCenter[i].Y = temp.Z;
+			distFromCenter[i].Z = temp.Y;
+			if (dir == DIR_RIGHT)
+			{
+				distFromCenter[i].Y *= -1;
+			}
+			else if (dir == DIR_LEFT)
+			{
+				distFromCenter[i].Z *= -1;
+			}
+			for (int j = 0; j < 3; j++)
+			{
+				block[i].V[j] = centerBlock.V[j] + distFromCenter[i].V[j];
+			}
+		}
+	}
+	if (spinAxis == AXIS_Z)
+	{
+		for (int i = 0; i < SIZE_OF_BLOCK; i++)
+		{
+			Vector3i_t temp = distFromCenter[i];
+			distFromCenter[i].X = temp.Y;
+			distFromCenter[i].Y = temp.X;
+			if (dir == DIR_RIGHT)
+			{
+				distFromCenter[i].X *= -1;
+			}
+			else if (dir == DIR_LEFT)
+			{
+				distFromCenter[i].Y *= -1;
+			}
+			for (int j = 0; j < 3; j++)
+			{
+				block[i].V[j] = centerBlock.V[j] + distFromCenter[i].V[j];
+			}
+		}
+	}
+
+
+	HFree(distFromCenter);
 }
 
 void PrintMap(int* map)
