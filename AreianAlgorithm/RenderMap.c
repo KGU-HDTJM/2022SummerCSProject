@@ -272,20 +272,12 @@ void CreateTexBuffer(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, VoxelTex_
 void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxelCount, int gridMode, int voxelMode,
 	VoxelModel* outVoxelAdress, VoxelModel* outGridAdress, VoxelTex_t* textureBufAddress)
 {
-
-	if (gridMode == VOXEL_GRID_MODE)
+	 if (gridMode == MAP_GRID_MODE)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glInterleavedArrays(GL_V3F, 0, outGridAdress);
-		glDrawArrays(GL_QUADS, 0, VOXEL_SIZE_TRIANGLES * SizeXZY);
-	}
-	else if (gridMode == MAP_GRID_MODE)
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glInterleavedArrays(GL_V3F, 0, outGridAdress);
+		glVertexPointer(3, GL_FLOAT, 0, outGridAdress);
 		glDrawArrays(GL_QUADS, 0, VOXEL_SIZE_QUADS);
 	}
-
 	//Voxel
 	if (voxelMode == SOLIDMODE)
 	{
@@ -294,25 +286,9 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 	else {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
-	/////////////////////////////////// 이부분 도 Render 라이브러리 로 교체 해야됨
-	for (int i = 0; i < voxelCount; i++)
-	{
-
-		for (int idx = 0; idx < VOXEL_SIZE_TRIANGLES; idx++)
-		{
-			//Texture
-			renderBuf[i].Voxel[idx][0] = textureBufAddress[i].Voxel[idx][0];//w
-			renderBuf[i].Voxel[idx][1] = textureBufAddress[i].Voxel[idx][1];//h
-			//Vertex
-			renderBuf[i].Voxel[idx][2] = outVoxelAdress[i].Voxel[idx][0];
-			renderBuf[i].Voxel[idx][3] = outVoxelAdress[i].Voxel[idx][1];
-			renderBuf[i].Voxel[idx][4] = outVoxelAdress[i].Voxel[idx][2];
-		}
-	}
-
-	glInterleavedArrays(GL_T2F_V3F, 0, renderBuf);
+	glVertexPointer(3, GL_FLOAT, 0, outVoxelAdress);
+	glTexCoordPointer(2, GL_FLOAT, 0, textureBufAddress);
 	glDrawArrays(GL_TRIANGLES, 0, VOXEL_SIZE_TRIANGLES * voxelCount);
-
 
 }
 
@@ -430,26 +406,7 @@ void CreateMapBuffer(Voxel_t* VoxelArr, Voxel_t* gridArr, int voxelCount, VoxelM
 		{-1 * xMaxPos,	   yMaxPos,	   zMaxPos}
 	};
 
-
-
-
-	if (gridMode == VOXEL_GRID_MODE)
-	{
-		for (int Vidx = 0; Vidx < gridSize; Vidx++)
-		{
-			for (int idx = 0; idx < VOXEL_SIZE_QUADS; idx++)
-			{
-				//gridVertex 
-				gridBuf[Vidx].Voxel[idx][0] = gridArr[Vidx].Vertex[faceQuads[idx]].X;
-				gridBuf[Vidx].Voxel[idx][1] = gridArr[Vidx].Vertex[faceQuads[idx]].Y;
-				gridBuf[Vidx].Voxel[idx][2] = gridArr[Vidx].Vertex[faceQuads[idx]].Z;
-
-			}
-
-
-		}
-	}
-	else if (gridMode == MAP_GRID_MODE)
+	if (gridMode == MAP_GRID_MODE)
 	{
 		for (int idx = 0; idx < VOXEL_SIZE_QUADS; idx++)
 		{
@@ -619,8 +576,6 @@ void DrawControlModel(Vector3i_t* blockModel, int voxelCount, int sizeX, int siz
 	}
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-	// 신형///////////////////////////////// 이부분 도 Render 라이브러리 로 교체 해야됨
 	glVertexPointer(3, GL_FLOAT, 0, modelBuffer);
 	glTexCoordPointer(2, GL_FLOAT, 0, texBuffer);
 
@@ -669,21 +624,29 @@ void ClickMouse(int button, int state, int x, int y)
 	{
 		if (button == GLUT_LEFT_BUTTON)
 		{
+			spinAxis = AXIS_X;
+			
+
 			printf("L\n");
 
 		}
 		else if (button == GLUT_MIDDLE_BUTTON)
 		{
+			spinAxis = AXIS_Z;
+
 			printf("M\n");
 
 		}
 		else if (button == GLUT_RIGHT_BUTTON)
 		{
+			spinAxis = AXIS_Y;
+		
+
 			printf("R\n");
 
 		}
 
-
+		SpinBlock(spinAxis, +1, Block, mapDataBuf);
 	}
 
 }
@@ -700,13 +663,7 @@ int main(int argc, char** argv)
 
 	mapDataBuf = HAlloc(sizeof(int) * SizeXZY, False, NULL);
 	
-	/*int asdf[250] = {
-		1,1,1,1,1,
-		1,1,1,1,1,
-		1,1,1,1,1,
-		1,1,1,0,0,
-		1,1,1,0,0,
-	};*/
+
 	for (int i = 0 ; i < SizeXZY ; i++)
 	{	
 		*(mapDataBuf+i) = 0 /*asdf[i]*/;
@@ -719,7 +676,6 @@ int main(int argc, char** argv)
 	glutInitWindowSize(1000, 1000);
 	glutInitWindowPosition(300, 200);
 	glClearColor(0.0F, 0.0F, 0.0F, 0.0F);//rgba (a: 투명도)
-
 	glutCreateWindow("Lighting");
 	
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -969,6 +925,7 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'X':
 	case 'x':
 		spinAxis = AXIS_X;
+
 		break;
 	case 'C':
 	case 'c':
