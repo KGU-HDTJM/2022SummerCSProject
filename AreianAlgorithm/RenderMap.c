@@ -716,7 +716,7 @@ int main(int argc, char** argv)
 	srand((unsigned int)time(NULL));
 
 	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_SINGLE);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 
 	glutInitWindowSize(1000, 1000);
 	glutInitWindowPosition(300, 200);
@@ -863,6 +863,7 @@ void Display(void)
 	{
 		Sleep(1);
 	}*/
+	glutSwapBuffers();
 	glutPostRedisplay();
 
 }
