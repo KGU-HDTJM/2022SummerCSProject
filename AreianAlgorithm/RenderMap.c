@@ -11,7 +11,10 @@
 #include "HDTJMDef.h"
 #include "StackAlloc.h"
 #include <time.h>
-
+int imageWidht, imageHeight;
+GLubyte* Texture;
+int gameLevel = 1;
+int gameScore;
 typedef struct
 {
 	Vector4f_t Vertex[8];
@@ -26,6 +29,8 @@ typedef struct
 #define VOXEL_SIZE_TRIANGLES 36
 
 #define VOXEL_SIZE 0.2F
+#define WORLD_MAP_SIZE 4.F
+
 
 //grid View mode
 #define MAP_GRID_MODE 0
@@ -142,6 +147,9 @@ typedef struct
 
 VoxelInfo_t* drawObjectArray;
 
+
+
+
 void Update();
 void InitLight(void);
 void Keyboard(unsigned char key, int x, int y);
@@ -159,6 +167,7 @@ void CreateMapBuffer(Voxel_t* VoxelArr, Voxel_t* gridArr, int voxelCount, VoxelM
 void DrawTetrisMap(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, GLfloat voxelSize);
 void VoxelTexMapping(int texturID, Vector2f_t* texBuf, int imgCount);
 void DrawControlModel(Vector3i_t* blockModel, int voxelCount, int sizeX, int sizeY, int sizeZ, int* dataBuf, float voxelSize, int textureID, int imgCount);
+void DrawAxis(void);
 void InputPositionThread(void);
 void ToggleThisPosition(int* arr, const int x, const int z, const int y);
 
@@ -182,14 +191,15 @@ void DrawFrame(int num)
 }
 void FrameRatingThread(void)
 {
-	while (True)
+	
+	while (bShouldRun)
 	{
 		Sleep(1000);
 		printf("Fps:%llu\n", FrameCount);
 		FrameCount = 0;
 	}
 }
-
+void DrawWorld(float size, int imgCount, int levelTexture);
 
 
 
@@ -271,24 +281,56 @@ void CreateTexBuffer(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, VoxelTex_
 
 void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxelCount, int gridMode, int voxelMode,
 	VoxelModel* outVoxelAdress, VoxelModel* outGridAdress, VoxelTex_t* textureBufAddress)
-{
-	 if (gridMode == MAP_GRID_MODE)
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		glVertexPointer(3, GL_FLOAT, 0, outGridAdress);
-		glDrawArrays(GL_QUADS, 0, VOXEL_SIZE_QUADS);
-	}
-	//Voxel
-	if (voxelMode == SOLIDMODE)
-	{
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+{	
+	Vector2f_t texBuf[VOXEL_SIZE_QUADS] = {0,};
+	if (bShouldRun) {
+		if (gridMode == MAP_GRID_MODE)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+			glTexCoordPointer(2, GL_FLOAT, 0, texBuf);
+			glColor3f(0.F,0.F,0.F);
+			glVertexPointer(3, GL_FLOAT, 0, outGridAdress);
+			
+			glDrawArrays(GL_QUADS, 0, VOXEL_SIZE_QUADS);
+			DrawAxis();
+			glColor3f(1.F,1.F,1.F,1.F);
+		}
+		//Voxel
+		if (voxelMode == SOLIDMODE)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+		else {
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
+		glVertexPointer(3, GL_FLOAT, 0, outVoxelAdress);
+		glTexCoordPointer(2, GL_FLOAT, 0, textureBufAddress);
+		glDrawArrays(GL_TRIANGLES, 0, VOXEL_SIZE_TRIANGLES * voxelCount);
+
 	}
 	else {
+		
+		
+		Vector2f_t texCoord[4] = {
+			{0.F, 0.F},
+			{1.F ,0.F},
+			{1.F, 1.F},
+			{0.F, 1.F},
+		};
+		for (int i = 0; i < VOXEL_SIZE_QUADS; i++) {
+			texBuf[i].X = texCoord[i % 4].X;
+			texBuf[i].Y = texCoord[i % 4].Y;
+		}
+		Texture = LoadBmp("../resource/GameOut.bmp", &imageWidht, &imageHeight);
+		InitTexture(Texture, imageWidht, imageHeight);
+		glTexCoordPointer(2, GL_FLOAT, 0, texBuf);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glVertexPointer(3, GL_FLOAT, 0, outGridAdress);
+		glDrawArrays(GL_QUADS, 0, VOXEL_SIZE_QUADS);
+		HFree(Texture);
+
 	}
-	glVertexPointer(3, GL_FLOAT, 0, outVoxelAdress);
-	glTexCoordPointer(2, GL_FLOAT, 0, textureBufAddress);
-	glDrawArrays(GL_TRIANGLES, 0, VOXEL_SIZE_TRIANGLES * voxelCount);
+	 
 
 }
 
@@ -444,45 +486,57 @@ void CreateMapBuffer(Voxel_t* VoxelArr, Voxel_t* gridArr, int voxelCount, VoxelM
 void DrawAxis(void)
 {
 
-	Vector3f_t axis[16] =
-	{
-		{-1,0,0},
-		{1,0,0},
+	Vector3f_t axis[32] =
+	{	
 
-		{1,0,0.2},
-		{1+0.2,0,-0.2},
+		{-0.4F, 0.F , -1 - 0.4F},
+		{-0.2F, 0.F , -1 - 0.2F},
+		{-0.2F, 0.F , -1 - 0.2F},
+		{0.F , 0.F , -1 - 0.4F},
+		{0.F , 0.F , -1 - 0.4F},
+		{0.2F, 0.F , -1 - 0.2F},
+		{0.2F, 0.F , -1 - 0.2F},
+		{0.4F, 0.F , -1 - 0.4F},
 
-		{1,0,-0.2},
-		{1 + 0.2,0,0.2},
 
-		{0,-1,0},
-		{0,1,0},
+		{0.1F, 0.F , +1 - 0.2F},
+		{-0.1F, 0.F , +1},
+		{-0.1F, 0.F , +1},
+		{0.1F , 0.F , +1 + 0.2F},
+		{0.1F , 0.F , +1 + 0.2F},
+		{-0.1F, 0.F , +1 + 0.4F},
 
-		{0,0,-1},
-		{0,0,1},
 
-		{-0.2,0,-1-0.4},
-		{ 0.2,0,-1-0.4},
+		{-1- 0.2F, 0.F , 0.4F},
+		{-1- 0.4F, 0.F , 0.F},
+		{-1- 0.4F, 0.F , 0.F},
+		{-1- 0.6F, 0.F , 0.4F},
+		{-1- 0.3F , 0.F , 0.2F},
+		{-1- 0.5F, 0.F , 0.2F},
 
-		{ 0.2,0,-1-0.4},
-		{-0.2,0,-1-0.2},
+		{1 + 0.2F, 0.F ,  0.2F},
+		{1 + 0.2F, 0.F , -0.2F},
+		{1 + 0.2F, 0.F , 0.2F},
+		{1 + 0.4F, 0.F , 0.15F},
+		{1 + 0.4F, 0.F , 0.15F},
+		{1 + 0.5F , 0.F , 0.0F},
+		
+		{1 + 0.5F , 0.F , 0.0F},
+		{1 + 0.4F, 0.F , -0.15F},
 
-		{-0.2,0,-1-0.2},
-		{ 0.2,0,-1-0.2},
+		{1 + 0.4F, 0.F , -0.15F},
+		{1 + 0.2F, 0.F , -0.2F},
+
 
 	};
-	Vector2f_t texClear[16] =
+	Vector2f_t texClear[5] =
 	{
 		0,
 	};
-
-
-	
 	
 	glTexCoordPointer(2,GL_FLOAT,0, texClear);
-
 	glVertexPointer(3, GL_FLOAT, 0, axis);
-	glDrawArrays(GL_LINES, 0,16);
+	glDrawArrays(GL_LINES, 0, 32);
 
 }
 
@@ -607,11 +661,11 @@ void PassiveMouse(int x, int y)
 #define PI 3.141592F;
 void WheelMouse(int wheel, int direction, int x, int y)
 {
-	if (direction > 0 && eyeR > 1.8F) {
+	if (direction > 0 && eyeR > 2.5F) {
 
 		eyeR -= 0.1F;
 	}
-	else
+	else if(eyeR < 4.F)
 	{
 		eyeR += 0.1F;
 	}
@@ -625,24 +679,15 @@ void ClickMouse(int button, int state, int x, int y)
 		if (button == GLUT_LEFT_BUTTON)
 		{
 			spinAxis = AXIS_X;
-			
-
-			printf("L\n");
-
 		}
 		else if (button == GLUT_MIDDLE_BUTTON)
 		{
 			spinAxis = AXIS_Z;
 
-			printf("M\n");
-
 		}
 		else if (button == GLUT_RIGHT_BUTTON)
 		{
 			spinAxis = AXIS_Y;
-		
-
-			printf("R\n");
 
 		}
 
@@ -676,25 +721,23 @@ int main(int argc, char** argv)
 	glutInitWindowSize(1000, 1000);
 	glutInitWindowPosition(300, 200);
 	glClearColor(0.0F, 0.0F, 0.0F, 0.0F);//rgba (a: 투명도)
-	glutCreateWindow("Lighting");
+	glutCreateWindow("Tetris");
 	
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	
 	//InitLight();// window 생성후 빛 초기화
-
-
+	Texture = LoadBmp("../resource/BlockTexture.bmp", &imageWidht, &imageHeight);
+	InitTexture(Texture, imageWidht, imageHeight);
 	// UPDATE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	InitLight();
+	
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_POLYGON_SMOOTH);
-
-	int imageWidht, imageHeight;
 	glEnable(GL_TEXTURE_2D);
-	GLubyte* Texture = LoadBmp("../resource/BlockTexture.bmp", &imageWidht, &imageHeight);
-	InitTexture(Texture, imageWidht, imageHeight);
+
+
 
 
 	glutReshapeFunc(Reshape);
@@ -707,9 +750,9 @@ int main(int argc, char** argv)
 
 	_beginthread(FrameRatingThread, 0, (void*)0);
 	//_beginthread((_beginthread_proc_type)InputPositionThread, 0, (void*)0);
-	
+
 	glutMainLoop();
-	
+
 	_endthread();
 	ReleaseStack(mapBufStack);
 	DumpHeap(NULL);
@@ -773,11 +816,14 @@ void InitTexture(unsigned char* data, int width, int height)
 
 void Display(void)
 {
-	clock_t i = clock();
+	//clock_t i = clock();
+
+	
 
 	//_asm int 3;
 	if (ModelY < -1) ModelY = 1;
 	FrameCount++;
+
 
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -799,19 +845,24 @@ void Display(void)
 
 	Update();
 
-	DrawControlModel(Block, SIZE_OF_BLOCK, SizeX, SizeY, SizeZ, (int*)mapDataBuf, VOXEL_SIZE, BlockNumber, IMG_COUNT);
-	DrawAxis();
-	DrawTetrisMap((int*)mapDataBuf, SizeX, SizeZ, SizeY, VOXEL_SIZE);
 	
+	DrawControlModel(Block, SIZE_OF_BLOCK, SizeX, SizeY, SizeZ, (int*)mapDataBuf, VOXEL_SIZE, BlockNumber, IMG_COUNT);
+
+	DrawTetrisMap((int*)mapDataBuf, SizeX, SizeZ, SizeY, VOXEL_SIZE);
+	DrawWorld(WORLD_MAP_SIZE , IMG_COUNT, gameLevel);
 	
 
 
 	glFlush();
-
-	while (clock() - i < 6)
+	if (!bShouldRun) 
+	{
+		return;
+	}
+	
+	/*while (clock() - i < 6)
 	{
 		Sleep(1);
-	}
+	}*/
 	glutPostRedisplay();
 
 }
@@ -823,14 +874,14 @@ void Reshape(int width, int height)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glFrustum(-1.0F * factor_w, 1.0F * factor_w, -1.0F * factor_h, 1.0F * factor_h, 1.f, 10.0f);
+	glFrustum(-1.0F * factor_w, 1.0F * factor_w, -1.0F * factor_h, 1.0F * factor_h, 1.f, 20.0f);
 
 }
 void InitLight(void)
 {
 	glEnable(GL_LIGHTING);
 	glShadeModel(GL_SMOOTH);
-	glEnable(GL_DEPTH_TEST);
+	
 
 	glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
 
@@ -855,7 +906,7 @@ void InitLight(void)
 
 	glDisable(GL_COLOR_MATERIAL);
 	GLfloat matrial_0_ambient[] = { 1.F,1.F,1.F,1.F };
-	GLfloat matrial_0_diffuse[] = { 1.0F,1.0F,1.0F,1.0F }; // 물체의 색상을 가장 직접적으로 결정
+	GLfloat matrial_0_diffuse[] = { 0.0F,0.0F,0.0F,1.0F }; // 물체의 색상을 가장 직접적으로 결정
 	GLfloat matrial_0_specular[] = { 1.0F , 1.0F ,1.0F ,1.0F };
 	GLfloat matrial_0_shininess[] = { 25.0F };
 	glMaterialfv(GL_FRONT, GL_AMBIENT, matrial_0_ambient);
@@ -965,7 +1016,9 @@ void Keyboard(unsigned char key, int x, int y)
 		break;
 	case 'p':
 		printf("%d\n", GetVoxelCount(mapDataBuf, SizeXZY));
+		break;
 		}
+
 
 
 	default:
@@ -1000,6 +1053,58 @@ void VoxelTrans(Vector3f_t* stdVoxel, Vector3f_t* tempVoxel, GLfloat x, GLfloat 
 		tempVoxel[i].Z = stdVoxel[i].Z + z + voxelSize * 0.5F;
 	}
 }
+void DrawWorld(float size, int imgCount, int levelTexture)
+{
+	Vector3f_t backGround[8] = {
+	{-1.F,-1.F,-1.F},
+	{-1.F,-1.F, 1.F},
+	{-1.F, 1.F,-1.F},
+	{-1.F, 1.F, 1.F},
+
+	{ 1.F,-1.F,-1.F},
+	{ 1.F,-1.F, 1.F},
+	{ 1.F, 1.F,-1.F},
+	{ 1.F, 1.F, 1.F}
+	};
+
+	GLuint faceTriangles[VOXEL_SIZE_TRIANGLES] = {
+	6,2,0,
+	0,4,6,
+
+	3,7,5,
+	5,1,3,
+
+	2,6,7,
+	7,3,2,
+
+	1,5,4,
+	4,0,1,
+
+	7,6,4,
+	4,5,7,
+
+	2,3,1,
+	1,0,2
+	};
+
+	ReVoxelSize(backGround, size);
+	VoxelModel* modelBuffer = HAlloc(sizeof(VoxelModel), False, NULL);
+	VoxelTex_t* texBuffer = HAlloc(sizeof(VoxelTex_t), False, NULL);
+
+	VertexFaceMapping(faceTriangles, VOXEL_SIZE_TRIANGLES, backGround, modelBuffer);
+	VoxelTexMapping(levelTexture, texBuffer, imgCount);
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glVertexPointer(3, GL_FLOAT, 0, modelBuffer);
+	glTexCoordPointer(2, GL_FLOAT, 0, texBuffer);
+	glDrawArrays(GL_TRIANGLES, 0, VOXEL_SIZE_TRIANGLES);
+	HFree(texBuffer);
+	HFree(modelBuffer);
+
+
+}
+
+
 
 int IsFullFloor(int* arr, const int floor)
 {
@@ -1262,7 +1367,12 @@ void PrintMap(int* map)
 void Update()
 {
 	if (bIsArrived == True) // 블록이 바닥(or 다른 블록)에 안착하면
-	{
+	{	
+
+		//~~~~~~~~~~~~~~ 8월 25 일 업데이트 
+		gameScore++;
+		if (gameScore % 50 == 0 ) gameLevel++;
+		//~~~~~~~~~~~~~~
 		bIsArrived = False;
 		if (BlockNumber != FIRST_BLOCK) // 맨 처음 실행하는게 아니면
 		{
