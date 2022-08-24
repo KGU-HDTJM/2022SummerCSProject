@@ -483,6 +483,51 @@ void CreateMapBuffer(Voxel_t* VoxelArr, Voxel_t* gridArr, int voxelCount, VoxelM
 
 }
 
+void DrawAxis(void)
+{
+
+	Vector3f_t axis[16] =
+	{
+		{-1,0,0},
+		{1,0,0},
+
+		{1,0,0.2},
+		{1+0.2,0,-0.2},
+
+		{1,0,-0.2},
+		{1 + 0.2,0,0.2},
+
+		{0,-1,0},
+		{0,1,0},
+
+		{0,0,-1},
+		{0,0,1},
+
+		{-0.2,0,-1-0.4},
+		{ 0.2,0,-1-0.4},
+
+		{ 0.2,0,-1-0.4},
+		{-0.2,0,-1-0.2},
+
+		{-0.2,0,-1-0.2},
+		{ 0.2,0,-1-0.2},
+
+	};
+	Vector2f_t texClear[16] =
+	{
+		0,
+	};
+
+
+	
+	
+	glTexCoordPointer(2,GL_FLOAT,0, texClear);
+
+	glVertexPointer(3, GL_FLOAT, 0, axis);
+	glDrawArrays(GL_LINES, 0,16);
+
+}
+
 void DrawTetrisMap(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, GLfloat voxelSize)
 {
 	int voxelCount = GetVoxelCount(mapDataBuf, SizeXZY);
@@ -578,8 +623,9 @@ void DrawControlModel(Vector3i_t* blockModel, int voxelCount, int sizeX, int siz
 	glVertexPointer(3, GL_FLOAT, 0, modelBuffer);
 	glTexCoordPointer(2, GL_FLOAT, 0, texBuffer);
 
-	glDrawArrays(GL_TRIANGLES, 0, VOXEL_SIZE_TRIANGLES * voxelCount);
 
+	glDrawArrays(GL_TRIANGLES, 0, VOXEL_SIZE_TRIANGLES * voxelCount);
+	
 
 	HFree(texBuffer);
 	HFree(modelBuffer);
@@ -667,13 +713,16 @@ int main(int argc, char** argv)
 	glClearColor(0.0F, 0.0F, 0.0F, 0.0F);//rgba (a: 투명도)
 
 	glutCreateWindow("Lighting");
+	
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	
 	//InitLight();// window 생성후 빛 초기화
 
 
 	// UPDATE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	InitLight();
+	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_POINT_SMOOTH);
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_POLYGON_SMOOTH);
@@ -784,13 +833,17 @@ void Display(void)
 
 
 	Update();
+
 	DrawControlModel(Block, SIZE_OF_BLOCK, SizeX, SizeY, SizeZ, (int*)mapDataBuf, VOXEL_SIZE, BlockNumber, IMG_COUNT);
+	DrawAxis();
 	DrawTetrisMap((int*)mapDataBuf, SizeX, SizeZ, SizeY, VOXEL_SIZE);
+	
+	
 
 
 	glFlush();
 	glutPostRedisplay();
-	//glutSwapBuffers();
+
 }
 void Reshape(int width, int height)
 {
@@ -800,7 +853,7 @@ void Reshape(int width, int height)
 
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(-1 * factor_w, 1 * factor_w, -1 * factor_h, 1 * factor_h, -10, 10);
+	glFrustum(-1.0F * factor_w, 1.0F * factor_w, -1.0F * factor_h, 1.0F * factor_h, 1.f, 10.0f);
 
 }
 void InitLight(void)
