@@ -1055,6 +1055,10 @@ int IsFullFloor(int* arr, const int floor)
 			PushVoxelInfo(drawObjectArray, (VoxelInfo_t) { i% SizeX, floor, i / SizeX, arr[i + (SizeZ * SizeX) * floor] });
 		}*/
 	}
+	/*if (bIsFullFloor)
+	{
+		AddSP(drawObjectArray, sizeof(VoxelInfo_t) * SizeZ * SizeX);
+	}*/
 	return bIsFullFloor;
 }
 void BreakFullFloor(int* arr, const int floor)
@@ -1314,6 +1318,7 @@ void Update()
 			if (IsFullFloor((int*)mapDataBuf, i)) // 맵에 다찬 층이 있는지 체크하고
 			{
 				BreakFullFloor((int*)mapDataBuf, i); // 다 차면 부숴서 윗층들을 다 내리고
+				i--;
 			}
 		}
 
