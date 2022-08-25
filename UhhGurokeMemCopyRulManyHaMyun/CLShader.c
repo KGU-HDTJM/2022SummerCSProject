@@ -10,6 +10,7 @@
 #define GPGPU_EXPORTS
 #include "CLShader.h"
 #define KERNEL_FILE_NAME "shader.cl"
+#define MAX_BUFFER 1<<16
 
 static cl_platform_id	Platform;
 static cl_device_id		Device;
@@ -30,6 +31,20 @@ int InitCL(void)
 {
 	size_t errRet = 0;
 	FILE* fp = 0;
+	fp = fopen(KERNEL_FILE_NAME, "r");
+	if(!fp)
+	{
+		fprintf(stderr, "Failed to load kernel.\n");
+	}
+	char* sourceStr = (char*)malloc(MAX_SOURCE_SIZE);
+	size_t sourceSize = fread(sourceStr, 1, MAX_SOURCE_SIZE, fp);
+	if (sourceSize == NULL)
+	{
+		printf("No source in this file\n");
+		return -1;
+	}
+	fclose(fp);
+
 	if (clGetPlatformIDs(1, &Platform, NULL) < 0)
 	{
 		printf("Fail clGetPlatformIDs(%s: %d)\n", __FILE__, __LINE__);
@@ -54,6 +69,7 @@ int InitCL(void)
 		errRet = clGetDeviceInfo(Device, )
 	}
 
+
 	Context = clCreateContext(NULL, 1, &Device, NULL, NULL, &errRet);
 	if (errRet < 0)
 	{
@@ -66,16 +82,54 @@ int InitCL(void)
 		printf("Failed Create Command Queue\n");
 		return -1;
 	}
+	Program = clCrearteProgramWithSource(Context, 1, &sourceStr, &sourceSize, &errRet);
+	errRet = clBuildProgram(Program, 0, NULL, NULL, NULL, NULL);
+	if (errRet != CL_SUCCESS)
+	{
+		size_t size;
+		char* buildlog = malloc(size);
 
+		errRet = clGetProgramBuildInfo(Program, Device, CL_PROGRAM_BUILD_LOG, 0, NULL, &size);
+		errRet = clGetProgramBuildInfo(Program, Device, CL_PROGRAM_BUILD_LOG, size, buildlog, NULL);
+		
+		printf("%s", buildlog);
+		free(buildlog);
+		return -1;
+	}
 
+	Kernels[0] = clCreateKernel(Program, "ConvertVoxelFromGrid", &errRet);
+	Kernels[1] = clCreateKernel(Program, "TransVoxel", &errRet);
+	Kernels[2] = clCreateKernel(Program, "Projection", &errRet);
+	Kernels[3] = clCreateKernel(Program, "FaceMapping", &errRet);
+	Kernels[4] = clCreateKernel(Program, "GetNormal", &errRet);
+	Kernels[5] = clCreateKernel(Program, "matrix_mult", &errRet);
+	Kernels[6] = clCreateKernel(Program, "transpose", &errRet);
 
-
+	MemBuffer[0] = clCreateBuffer(Context, CL_MEM_READ_ONLY,MAX_BUFFER, &errRet);
+	MemBuffer[1] = clCreateBuffer(Context, CL_MEM_READ_ONLY,MAX_BUFFER, &errRet);
+	MemBuffer[2] = clCreateBuffer(Context, CL_MEM_READ_ONLY,MAX_BUFFER, &errRet);
+	MemBuffer[3] = clCreateBuffer(Context, CL_MEM_READ_WRITE,MAX_BUFFER, &errRet);
+	MemBuffer[4] = clCreateBuffer(Context, CL_MEM_READ_WRITE,MAX_BUFFER, &errRet);
+	MemBuffer[5] = clCreateBuffer(Context, CL_MEM_WRITE_ONLY,MAX_BUFFER, &errRet);
+	MemBuffer[6] = clCreateBuffer(Context, CL_MEM_WRITE_ONLY,MAX_BUFFER, &errRet);
 }
 
+void EndCL(void)
+{
+	clFlush(CommandQueue);
+	clFinish(CommandQueue);
+	clReleaseKernel(Kernels);
+	clReleaseMemObject(MemBuffer);
+	clReleaseProgram(Program);
+	clReleaseCommandQueue(CmdQueue);
+	clReleaseContext(Context);
+}
+
+void 
 
 int main(void)
 {
 	InitCL();
 
-
+	EndCL();
 }
