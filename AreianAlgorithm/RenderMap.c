@@ -201,7 +201,7 @@ void FrameRatingThread(void)
 	}
 }
 void DrawWorld(float size, int imgCount, int levelTexture);
-
+void GameShutDown();
 
 
 
@@ -284,7 +284,7 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 	VoxelModel* outVoxelAdress, VoxelModel* outGridAdress, VoxelTex_t* textureBufAddress)
 {	
 	Vector2f_t texBuf[VOXEL_SIZE_QUADS] = {0,};
-	if (bShouldRun) {
+	
 		if (gridMode == MAP_GRID_MODE)
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -308,10 +308,8 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 		glTexCoordPointer(2, GL_FLOAT, 0, textureBufAddress);
 		glDrawArrays(GL_TRIANGLES, 0, VOXEL_SIZE_TRIANGLES * voxelCount);
 
-	}
-	else {
 	
-		
+	/*
 		Vector2f_t texCoord[4] = {
 			{0.F, 0.F},
 			{1.F ,0.F},
@@ -338,7 +336,7 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 		Sleep(3000);
 		_endthread();
 
-	}
+	*/
 	 
 
 }
@@ -1372,7 +1370,12 @@ void PrintMap(int* map)
 		printf("\n");
 	}
 }
-
+void GameShutDown()
+{
+	system("cls");
+	printf("GAME OVER\nScore: %d", gameScore);
+	bShouldRun = False;
+}
 void Update()
 {
 	if (bIsArrived == True) // 블록이 바닥(or 다른 블록)에 안착하면
@@ -1389,9 +1392,9 @@ void Update()
 		}
 		
 
-		for (int i = 0; i < SizeY; i++)
+		for (int i = 0; i < SizeY; i++) // 모든 층에
 		{
-			if (IsFullFloor((int*)mapDataBuf, i)) // 맵에 다찬 층이 있는지 체크하고
+			if (IsFullFloor((int*)mapDataBuf, i)) // 층이 있는지 체크하고
 			{
 				BreakFullFloor((int*)mapDataBuf, i); // 다 차면 부숴서 윗층들을 다 내리고
 				i--;
@@ -1403,6 +1406,10 @@ void Update()
 		for (int i = 0; i < SIZE_OF_BLOCK; i++)
 		{
 			Block[i].Y = SizeY - 1;
+		}
+		if (mapDataBuf[SizeZ * SizeX * (SizeY - 1) ] != 0)
+		{
+			GameShutDown();
 		}
 	}
 }
