@@ -39,8 +39,8 @@ typedef struct
 int inputPosX, inputPosZ, inputPosY;
 
 int SizeY = 10;
-int SizeZ = 5;
-int SizeX = 5;
+int SizeZ = 4;
+int SizeX = 4;
 int SizeXZY;
 int* mapDataBuf;
 
@@ -824,7 +824,7 @@ void InitTexture(unsigned char* data, int width, int height)
 
 void Display(void)
 {
-	//clock_t i = clock();
+	clock_t i = clock();
 
 	
 
@@ -866,10 +866,10 @@ void Display(void)
 		return;
 	}
 	
-	/*while (clock() - i < 6)
+	while (clock() - i < 6)
 	{
 		Sleep(1);
-	}*/
+	}
 	glutSwapBuffers();
 	glutPostRedisplay();
 
