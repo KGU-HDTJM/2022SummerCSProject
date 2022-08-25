@@ -86,21 +86,21 @@ Vector4f_t VectorCross(Vector4f_t vector1, Vector4f_t vector2)
 }
 //-----------------------------------------------------------
 
-//Matrix4_t GetWorldTransRotScale(float scale,int axis, int angle,float transX,float transY , float transZ )
-//{
-//	Vector4f_t trans;
-//	trans.X = transX;
-//	trans.Y = transY;
-//	trans.Z = transZ;
-//
-//	Matrix4_t sMat = Scale(scale);
-//	Matrix4_t rMat = Rot(axis, angle);
-//	Matrix4_t tMat = Trans(trans);
-//	
-//	Matrix4_t rsMat = MulMatrix4(&rMat, &sMat);
-//	Matrix4_t retMAt = MulMatrix4(&tMat, &rsMat);
-//	return retMAt;
-//}
+Matrix4_t GetWorldTransRotScale(float scale,int axis, int angle,float transX,float transY , float transZ )
+{
+	Vector4f_t trans;
+	trans.X = transX;
+	trans.Y = transY;
+	trans.Z = transZ;
+
+	Matrix4_t sMat = Scale(scale);
+	Matrix4_t rMat = Rot(axis, angle);
+	Matrix4_t tMat = Trans(trans);
+	
+	Matrix4_t rsMat = MulMatrix4(&rMat, &sMat);
+	Matrix4_t retMAt = MulMatrix4(&tMat, &rsMat);
+	return retMAt;
+}
 
 Matrix4_t GetLookatMat(float eyeX,float eyeY,float eyeZ,float centerX, float centerY,float centerZ,float upX,float upY,float upZ)
 {
