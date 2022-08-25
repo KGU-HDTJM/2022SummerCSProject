@@ -38,7 +38,7 @@ typedef struct
 
 int inputPosX, inputPosZ, inputPosY;
 
-int SizeY = 10;
+int SizeY = 12;
 int SizeZ = 4;
 int SizeX = 4;
 int SizeXZY;
@@ -133,7 +133,7 @@ typedef struct {
 typedef struct {
 	GLfloat Voxel[36][5];
 }RenderModel_t;
-GLfloat eyeR = 1.8F;
+GLfloat eyeR = 2.5F;
 GLfloat camx, camy, camz;
 GLfloat hrzndegree = -60.0F, vrtcldegree = 60.0F;
 
@@ -189,17 +189,39 @@ void DrawFrame(int num)
 	glutPostRedisplay();
 	glutTimerFunc(1, DrawFrame, 0);
 }
-void FrameRatingThread(void)
+void GameInfoRatingThread(void)
 {
-	
-	while (bShouldRun)
+	while (1)
 	{
+		if (!bShouldRun)
+		{
+			_endthread();
+			return;
+		}
 		Sleep(1000);
-		system("cls");
-		printf("FPS:%llu\n", FrameCount);
-		FrameCount = 0;	
+		if (bShouldRun)
+		{
+			system("cls");
+			printf("FPS:%llu\n<LEVEL %d> \nSCORE : %d\n", FrameCount,gameLevel, gameScore);
+			FrameCount = 0;
+		}
+		
+	
 	}
+	
 }
+void BlockDown(void) {
+	while(bShouldRun)
+	{
+		if (!bShouldRun) {
+			_endthread();
+		}
+		Sleep(2000);
+		MoveBlock(0, 0, -1, Block);
+	}
+	
+}
+
 void DrawWorld(float size, int imgCount, int levelTexture);
 void GameShutDown();
 
@@ -216,17 +238,9 @@ void VertexFaceMapping(int* face, size_t facelen, Vector3f_t* vertex, Vector3f_t
 	}
 }
 
-//-------------------------------------------------
-
-
-//--------------------------------------------------------------------------------------
-
-
 void CreateTexBuffer(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, VoxelTex_t* texBuf, int imgCount);
 void LoadMapBuf(int* mapDataBuf, int sizeX, int sizeY, int sizeZ, GLfloat voxelSize, int voxelCount,
 	VoxelModel* outVoxelAddress, VoxelModel* outGridAddress, Voxel_t* voxelArr, Voxel_t* gridArr, VoxelTex_t* outTexBufAddress);
-
-
 
 void LoadMapBuf(int* mapDataBuf, int sizeX, int sizeY, int sizeZ, GLfloat voxelSize, int voxelCount,
 	VoxelModel* outVoxelAddress, VoxelModel* outGridAddress, Voxel_t* voxelArr, Voxel_t* gridArr, VoxelTex_t* outTexBufAddress)
@@ -284,7 +298,7 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 	VoxelModel* outVoxelAdress, VoxelModel* outGridAdress, VoxelTex_t* textureBufAddress)
 {	
 	Vector2f_t texBuf[VOXEL_SIZE_QUADS] = {0,};
-	
+	if (bShouldRun) {
 		if (gridMode == MAP_GRID_MODE)
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -311,7 +325,8 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 		glDrawArrays(GL_TRIANGLES, 0, VOXEL_SIZE_TRIANGLES * voxelCount);
 
 	
-	/*
+	}
+	else {// 게임 오버 렌더 
 		Vector2f_t texCoord[4] = {
 			{0.F, 0.F},
 			{1.F ,0.F},
@@ -322,7 +337,7 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 			texBuf[i].X = texCoord[i % 4].X;
 			texBuf[i].Y = texCoord[i % 4].Y;
 		}
-		Texture = LoadBmp("../resource/GameOut.bmp", &imageWidht, &imageHeight);
+		Texture = LoadBmp("../resource/GameOver.bmp", &imageWidht, &imageHeight);
 		
 		InitTexture(Texture, imageWidht, imageHeight);
 		glTexCoordPointer(2, GL_FLOAT, 0, texBuf);
@@ -332,13 +347,7 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 		glDrawArrays(GL_QUADS, 0, VOXEL_SIZE_QUADS);
 		glutSwapBuffers();
 		HFree(Texture);
-		ReleaseStack(mapBufStack);
-		DumpHeap(NULL);
-		ReleaseMainMem();
-		Sleep(3000);
-		_endthread();
-
-	*/
+	}
 	 
 
 }
@@ -584,7 +593,7 @@ void DrawTetrisMap(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, GLfloat vox
 //modelTracer
 void DrawControlModel(Vector3i_t* blockModel, int voxelCount, int sizeX, int sizeY, int sizeZ, int* dataBuf, float voxelSize, int textureID, int imgCount)
 {
-	if (textureID == 0) return;
+	if (textureID == 0 || !bShouldRun) return;
 	float tempX, tempY, tempZ;
 	int x, y, z;
 	Vector3f_t stdVoxel[8] = {
@@ -757,15 +766,10 @@ int main(int argc, char** argv)
 	glutMouseWheelFunc(WheelMouse);
 
 
-	_beginthread(FrameRatingThread, 0, (void*)0);
+	_beginthread(GameInfoRatingThread, 0, (void*)0);
 	//_beginthread((_beginthread_proc_type)InputPositionThread, 0, (void*)0);
-
+	_beginthread(BlockDown,0,(void*)0);
 	glutMainLoop();
-
-	_endthread();
-	ReleaseStack(mapBufStack);
-	DumpHeap(NULL);
-	ReleaseMainMem();
 	return 0;
 }
 GLubyte* LoadBmp(const char* imagePath, int* width, int* height)
@@ -853,8 +857,6 @@ void Display(void)
 
 
 	Update();
-
-	
 	DrawControlModel(Block, SIZE_OF_BLOCK, SizeX, SizeY, SizeZ, (int*)mapDataBuf, VOXEL_SIZE, BlockNumber, IMG_COUNT);
 	DrawTetrisMap((int*)mapDataBuf, SizeX, SizeZ, SizeY, VOXEL_SIZE);
 	DrawWorld(WORLD_MAP_SIZE , IMG_COUNT, gameLevel);
@@ -864,7 +866,7 @@ void Display(void)
 	glFlush();
 	if (!bShouldRun) 
 	{
-		return;
+		GameShutDown();
 	}
 	
 	while (clock() - i < 6)
@@ -972,7 +974,7 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'd':
 		MoveBlock(+1, 0, 0, Block);
 		break;
-	case 9:
+	case 9://tap
 		MoveBlock(0, 0, -1, Block);
 		break;
 		}
@@ -1027,12 +1029,11 @@ void Keyboard(unsigned char key, int x, int y)
 		printf("%d\n", GetVoxelCount(mapDataBuf, SizeXZY));
 		break;
 		}
-
-
-
 	default:
+	
 		break;
 	}
+
 }
 
 int GetVoxelCount(int* arr, const int sizeMax)
@@ -1374,9 +1375,26 @@ void PrintMap(int* map)
 }
 void GameShutDown()
 {
-	system("cls");
-	printf("GAME OVER\nScore: %d", gameScore);
-	bShouldRun = False;
+	//system("cls");
+
+
+	printf("+++++++++++++++++++++++\n");
+	printf("+GAME OVER : Score: %d +\n", gameScore);
+	printf("+++++++++++++++++++++++\n");
+
+	printf("\n==========memoryUsageHistory==========\n");
+	ReleaseStack(mapBufStack);
+	DumpHeap(NULL);
+	ReleaseMainMem();
+	printf("\n==========Close Program========== \n");
+
+	for (int i = 0; i < 5; Sleep(1000))
+	{
+		printf("%dsec later game close\n", 5 - (i++));
+		
+	}
+	exit(1);
+
 }
 void Update()
 {
@@ -1398,6 +1416,8 @@ void Update()
 		{
 			if (IsFullFloor((int*)mapDataBuf, i)) // 층이 있는지 체크하고
 			{
+				printf("\n!Floor Break!\n Bonus score+10\n");
+				gameScore += 10;
 				BreakFullFloor((int*)mapDataBuf, i); // 다 차면 부숴서 윗층들을 다 내리고
 				i--;
 			}
@@ -1411,7 +1431,8 @@ void Update()
 		}
 		if (mapDataBuf[SizeZ * SizeX * (SizeY - 1) ] != 0)
 		{
-			GameShutDown();
+			//GameShutDown();
+			bShouldRun = False;
 		}
 	}
 }
