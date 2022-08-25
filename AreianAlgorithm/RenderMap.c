@@ -195,8 +195,9 @@ void FrameRatingThread(void)
 	while (bShouldRun)
 	{
 		Sleep(1000);
-		printf("Fps:%llu\n", FrameCount);
-		FrameCount = 0;
+		system("cls");
+		printf("FPS:%llu\n", FrameCount);
+		FrameCount = 0;	
 	}
 }
 void DrawWorld(float size, int imgCount, int levelTexture);
