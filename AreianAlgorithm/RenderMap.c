@@ -292,6 +292,8 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 			glColor3f(0.F,0.F,0.F);
 			glVertexPointer(3, GL_FLOAT, 0, outGridAdress);
 			
+			
+
 			glDrawArrays(GL_QUADS, 0, VOXEL_SIZE_QUADS);
 			DrawAxis();
 			glColor3f(1.F,1.F,1.F,1.F);
@@ -836,7 +838,7 @@ void Display(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-
+	
 	GLfloat radhrz = (90 - hrzndegree / 180) * PI;
 	GLfloat radvrt = ((90 - vrtcldegree) / 180) * PI;
 	camx = (GLfloat)eyeR * (GLfloat)cos(radvrt) * (GLfloat)cos(radhrz);
