@@ -7,7 +7,12 @@ KGU 2022 Summer CS C-With Project
 # ⚠️Alert⚠️
 ## 프로그래밍 할때 항상 master branch에 있는 내부 문서들을 볼 수 있게 하고 특히 코딩표준 문서는 익숙해지기 전까지 코딩표준을 보면서 코딩표준에 맞춰서 코드를 작성한다.
   > 나중에 습관이니 뭐니 변명하면.. 그 코드 사용 못하게 할꺼임
-### 깃허브 레포에  처음 푸시하는 사람 푸시하기전에 현다태재민 프로젝트 설정 방법하고 프로젝트 생성 후 깃에 푸시하는 과정 방법 아는 사람에게 배운다음에 깃 사용
+### 프로젝트 빌드 순서
+1. HDTJMThread 솔루션 빌드
+2. MemAlloc 솔루션 빌드
+3. StackAlloc 솔루션 빌드
+4. LinearAlgebra 솔루션빌드
+5. ArianAlgorithm 솔루션빌드
 ## 코딩 표준 준수
 ### 현다재민 코딩 표준: https://github.com/KGU-HDJM/2022SummerCSProject/blob/master/docs/CodingStyleConvention.md
 예제 코드를 가져다 쓰는 것이여도 분석하는 과정에서 코딩 표준에 맞게 수정 (변수, 함수, 구조체, 변수 등의 이름을 바꿔야 할때 **Ctrl + f** 로 변수를 선택하고 replace)
