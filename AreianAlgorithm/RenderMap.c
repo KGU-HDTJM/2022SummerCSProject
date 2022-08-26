@@ -1228,10 +1228,10 @@ boolean_t IsEnabledToMoveBlockToNextPosition(int dx, int dz, int dy, Vector3i_t*
 }
 void MoveBlock(int dx, int dz, int dy, Vector3i_t* block)
 {
-	if (!IsEnabledToMoveBlockToNextPosition(dx, dz, dy, block, (int*)mapDataBuf))
-		return;
+	if (!IsEnabledToMoveBlockToNextPosition(dx, dz, dy, block, mapDataBuf)) // 원하는 방향으로 움직일 수 없다면
+		return; // 아무것도 하지 않음
 
-	for (int i = 0; i < SIZE_OF_BLOCK; i++)
+	for (int i = 0; i < SIZE_OF_BLOCK; i++) // 이동
 	{
 		block[i].X += dx;
 		block[i].Z += dz;
@@ -1259,45 +1259,46 @@ void SetNewBlock(Vector3i_t* block, const Vector3i_t* newBlock)
 void SpinBlock(int spinAxis, int dir, Vector3i_t* block, int* arr)
 {
 	const int centerBlockIdx = 1;
-	Vector3i_t centerBlock = block[centerBlockIdx];
+	Vector3i_t centerBlock = block[centerBlockIdx]; // 돌려지지 않는 중심 블록을 설정하기
 	Vector3i_t* distFromCenter = HAlloc(sizeof(Vector3i_t) * SIZE_OF_BLOCK, False, NULL);
 	Vector3i_t* result = HAlloc(sizeof(Vector3i_t) * SIZE_OF_BLOCK, False, NULL);
 
-	for (int i = 0; i < SIZE_OF_BLOCK; i++)
+	for (int i = 0; i < SIZE_OF_BLOCK; i++) // 각 블록과 중심블록간의 벡터차이를 구하기
 	{
 		distFromCenter[i].X = block[i].X - centerBlock.X;
 		distFromCenter[i].Z = block[i].Z - centerBlock.Z;
 		distFromCenter[i].Y = block[i].Y - centerBlock.Y;
 	}
 	
-	for (int i = 0; i < SIZE_OF_BLOCK; i++)
+	for (int i = 0; i < SIZE_OF_BLOCK; i++) // 각 블록마다
 	{
 		Vector3i_t temp = distFromCenter[i];
-		distFromCenter[i].V[(3 + spinAxis - 1) % 3] = temp.V[(3 + spinAxis + 1) % 3];
-		distFromCenter[i].V[(3 + spinAxis + 1) % 3] = temp.V[(3 + spinAxis - 1) % 3];
+		distFromCenter[i].V[(3 + spinAxis - 1) % 3] = temp.V[(3 + spinAxis + 1) % 3]; // 회전축의 값을 제외한 값끼리
+		distFromCenter[i].V[(3 + spinAxis + 1) % 3] = temp.V[(3 + spinAxis - 1) % 3]; // 스왑시키고
 
-		distFromCenter[i].V[(3 + spinAxis + dir) % 3] *= -1;
+		distFromCenter[i].V[(3 + spinAxis + dir) % 3] *= -1; // 왼쪽으로 돌릴지 오른쪽으로 돌릴지 결정하고
 
 		int nx = centerBlock.X + distFromCenter[i].X;
 		int nz = centerBlock.Z + distFromCenter[i].Z;
 		int ny = centerBlock.Y + distFromCenter[i].Y;
 
-		if (nx < 0 || nx >= SizeX || nz < 0 || nz >= SizeZ || ny < 0 || ny >= SizeY)
+		// 만약 돌리고 싶은 방향이
+		if (nx < 0 || nx >= SizeX || nz < 0 || nz >= SizeZ || ny < 0 || ny >= SizeY) // 맵 밖으로 나가거나
 		{
 			HFree(distFromCenter);
 			HFree(result);
 			return;
 		}
-		if (arr[(SizeZ * SizeX) * ny + SizeX * nz + nx] != 0)
+		if (arr[(SizeZ * SizeX) * ny + SizeX * nz + nx] != 0) // 이미 다른 블록이 존재한다면 
 		{
 			HFree(distFromCenter);
 			HFree(result);
-			return;
+			return; // 돌리지 않음
 		}
-		result[i] = (Vector3i_t){ nx, ny, nz };
+		result[i] = (Vector3i_t){ nx, ny, nz }; // 돌릴 수 있으면 값 넣어주기
 	}
 	
-	for (int i = 0; i < NUMBER_OF_BLOCKS; i++)
+	for (int i = 0; i < NUMBER_OF_BLOCKS; i++) // 결과값을 반영시키기
 	{
 		block[i] = result[i];
 	}
@@ -1398,3 +1399,4 @@ void Update()
 		}
 	}
 }
+
