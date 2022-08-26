@@ -27,7 +27,7 @@
 int imageWidht, imageHeight;
 GLubyte* Texture;
 int gameLevel = 1;
-int gameScore;
+int gameScore = 0;
 int blockDownTime = 2000;
 typedef struct
 {
@@ -102,10 +102,10 @@ const Vector3i_t BlockList[NUMBER_OF_BLOCKS + 1][SIZE_OF_BLOCK] =
 Vector3i_t Block[SIZE_OF_BLOCK];
 
 #define AXIS_X 0
-#define AXIS_Z 1
-#define AXIS_Y 2
-#define DIR_RIGHT 1
-#define DIR_LEFT -1
+#define AXIS_Z 2
+#define AXIS_Y 1
+#define DIR_RIGHT -1
+#define DIR_LEFT 1
 
 int spinAxis = AXIS_X;
 
@@ -205,7 +205,7 @@ void DrawFrame(int num)
 }
 void GameInfoRatingThread(void)
 {
-	while (1)
+	while (True)
 	{
 		if (!bShouldRun)
 		{
@@ -387,12 +387,12 @@ void CreateVoxelMap(int sizeX, int sizeY, int sizeZ, int* dataBuf, float voxelSi
 	int gridArrIdx = 0;
 	float tempX, tempY, tempZ;
 
-	int x, y, z;
-	for (y = 0; y < sizeY; y++)
+	
+	for (int y = 0; y < sizeY; y++)
 	{
-		for (z = 0; z < sizeZ; z++)
+		for (int z = 0; z < sizeZ; z++)
 		{
-			for (x = 0; x < sizeX; x++)
+			for (int x = 0; x < sizeX; x++)
 			{
 
 				Vector3f_t tempVoxel[8] = { 0, };
@@ -417,7 +417,8 @@ void CreateVoxelMap(int sizeX, int sizeY, int sizeZ, int* dataBuf, float voxelSi
 				// 복쉘 채우기
 				if (dataBuf[(sizeZ * sizeX) * y + sizeX * z + x] != 0)
 				{
-					for (int i = 0; i < 8; i++) {
+					for (int i = 0; i < 8; i++) 
+					{
 						voxelArr[voxelArrIdx].Vertex[i].X = tempVoxel[i].X;
 						voxelArr[voxelArrIdx].Vertex[i].Y = tempVoxel[i].Y;
 						voxelArr[voxelArrIdx].Vertex[i].Z = tempVoxel[i].Z;
@@ -723,7 +724,7 @@ void ClickMouse(int button, int state, int x, int y)
 
 		}
 
-		SpinBlock(spinAxis, +1, Block, mapDataBuf);
+		SpinBlock(spinAxis, -1, Block, mapDataBuf);
 	}
 
 }
@@ -734,7 +735,7 @@ int main(int argc, char** argv)
 	SizeXZY = SizeX * SizeZ * SizeY;
 
 	mapBufStack = CreateStack(
-		(sizeof(Voxel_t) + sizeof(VoxelModel)) * SizeXZY * 5
+		(sizeof(Voxel_t) + sizeof(VoxelModel)) * SizeXZY * 30
 	);
 	
 
@@ -743,7 +744,7 @@ int main(int argc, char** argv)
 
 	for (int i = 0 ; i < SizeXZY ; i++)
 	{	
-		*(mapDataBuf+i) = 0 /*asdf[i]*/;
+		*(mapDataBuf + i) = 0 /*asdf[i]*/;
 	}
 	srand((unsigned int)time(NULL));
 
@@ -751,7 +752,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE);
 
 	glutInitWindowSize(1000, 1000);
-	glutInitWindowPosition(300, 200);
+	glutInitWindowPosition(300, 40);
 
 
 	glutCreateWindow("Tetris");
@@ -880,7 +881,7 @@ void Display(void)
 		GameShutDown();
 	}
 	
-	while (clock() - i <= 1)
+	while (clock() - i <= 6)
 	{
 		Sleep(1);
 	}
@@ -1014,11 +1015,11 @@ void Keyboard(unsigned char key, int x, int y)
 		{
 	case 'Q':
 	case 'q':
-		SpinBlock(spinAxis, -1, Block, mapDataBuf);
+		SpinBlock(spinAxis, DIR_LEFT, Block, mapDataBuf);
 		break;
 	case 'E':
 	case 'e':
-		SpinBlock(spinAxis, +1, Block, mapDataBuf);
+		SpinBlock(spinAxis, DIR_RIGHT, Block, mapDataBuf);
 		break;
 		}
 		// 그 밖의 잡다한거
@@ -1033,7 +1034,7 @@ void Keyboard(unsigned char key, int x, int y)
 		dPI += 1;
 		break;
 	case 27:// esc
-		bShouldRun = False;
+		system("PAUSE");
 		break;
 	case '1':
 		PrintMap(mapDataBuf);
@@ -1147,8 +1148,6 @@ void DrawWorld(float size, int imgCount, int levelTexture)
 
 }
 
-
-
 int IsFullFloor(int* arr, const int floor)
 {
 	boolean_t bIsFullFloor = True;
@@ -1229,10 +1228,10 @@ boolean_t IsEnabledToMoveBlockToNextPosition(int dx, int dz, int dy, Vector3i_t*
 }
 void MoveBlock(int dx, int dz, int dy, Vector3i_t* block)
 {
-	if (!IsEnabledToMoveBlockToNextPosition(dx, dz, dy, block, (int*)mapDataBuf))
-		return;
+	if (!IsEnabledToMoveBlockToNextPosition(dx, dz, dy, block, mapDataBuf)) // 원하는 방향으로 움직일 수 없다면
+		return; // 아무것도 하지 않음
 
-	for (int i = 0; i < SIZE_OF_BLOCK; i++)
+	for (int i = 0; i < SIZE_OF_BLOCK; i++) // 이동
 	{
 		block[i].X += dx;
 		block[i].Z += dz;
@@ -1260,123 +1259,46 @@ void SetNewBlock(Vector3i_t* block, const Vector3i_t* newBlock)
 void SpinBlock(int spinAxis, int dir, Vector3i_t* block, int* arr)
 {
 	const int centerBlockIdx = 1;
-	Vector3i_t centerBlock = block[centerBlockIdx];
+	Vector3i_t centerBlock = block[centerBlockIdx]; // 돌려지지 않는 중심 블록을 설정하기
 	Vector3i_t* distFromCenter = HAlloc(sizeof(Vector3i_t) * SIZE_OF_BLOCK, False, NULL);
 	Vector3i_t* result = HAlloc(sizeof(Vector3i_t) * SIZE_OF_BLOCK, False, NULL);
 
-	for (int i = 0; i < SIZE_OF_BLOCK; i++)
+	for (int i = 0; i < SIZE_OF_BLOCK; i++) // 각 블록과 중심블록간의 벡터차이를 구하기
 	{
 		distFromCenter[i].X = block[i].X - centerBlock.X;
 		distFromCenter[i].Z = block[i].Z - centerBlock.Z;
 		distFromCenter[i].Y = block[i].Y - centerBlock.Y;
 	}
 	
-		 if (spinAxis == AXIS_X)
+	for (int i = 0; i < SIZE_OF_BLOCK; i++) // 각 블록마다
 	{
-		for (int i = 0; i < SIZE_OF_BLOCK; i++)
+		Vector3i_t temp = distFromCenter[i];
+		distFromCenter[i].V[(3 + spinAxis - 1) % 3] = temp.V[(3 + spinAxis + 1) % 3]; // 회전축의 값을 제외한 값끼리
+		distFromCenter[i].V[(3 + spinAxis + 1) % 3] = temp.V[(3 + spinAxis - 1) % 3]; // 스왑시키고
+
+		distFromCenter[i].V[(3 + spinAxis + dir) % 3] *= -1; // 왼쪽으로 돌릴지 오른쪽으로 돌릴지 결정하고
+
+		int nx = centerBlock.X + distFromCenter[i].X;
+		int nz = centerBlock.Z + distFromCenter[i].Z;
+		int ny = centerBlock.Y + distFromCenter[i].Y;
+
+		// 만약 돌리고 싶은 방향이
+		if (nx < 0 || nx >= SizeX || nz < 0 || nz >= SizeZ || ny < 0 || ny >= SizeY) // 맵 밖으로 나가거나
 		{
-			Vector3i_t temp = distFromCenter[i];
-			distFromCenter[i].Y = temp.Z;
-			distFromCenter[i].Z = temp.Y;
-			if (dir == DIR_RIGHT)
-			{
-				distFromCenter[i].Y *= -1;
-			}
-			else if (dir == DIR_LEFT)
-			{
-				distFromCenter[i].Z *= -1;
-			}
-			int nx = centerBlock.X + distFromCenter[i].X;
-			int nz = centerBlock.Z + distFromCenter[i].Z;
-			int ny = centerBlock.Y + distFromCenter[i].Y;
-
-			if (nx < 0 || nx >= SizeX || nz < 0 || nz >= SizeZ || ny < 0 || ny >= SizeY)
-			{
-				HFree(distFromCenter);
-				HFree(result);
-				return;
-			}
-			if (arr[(SizeZ * SizeX) * ny + SizeX * nz + nx] != 0)
-			{
-				HFree(distFromCenter);
-				HFree(result);
-				return;
-			}
-			result[i] = (Vector3i_t){ nx, ny, nz };
+			HFree(distFromCenter);
+			HFree(result);
+			return;
 		}
-	}
-	else if (spinAxis == AXIS_Z)
-	{
-		for (int i = 0; i < SIZE_OF_BLOCK; i++)
+		if (arr[(SizeZ * SizeX) * ny + SizeX * nz + nx] != 0) // 이미 다른 블록이 존재한다면 
 		{
-			Vector3i_t temp = distFromCenter[i];
-			distFromCenter[i].X = temp.Y;
-			distFromCenter[i].Y = temp.X;
-			if (dir == DIR_RIGHT)
-			{
-				distFromCenter[i].X *= -1;
-			}
-			else if (dir == DIR_LEFT)
-			{
-				distFromCenter[i].Y *= -1;
-			}
-			int nx = centerBlock.X + distFromCenter[i].X;
-			int nz = centerBlock.Z + distFromCenter[i].Z;
-			int ny = centerBlock.Y + distFromCenter[i].Y;
-
-			if (nx < 0 || nx >= SizeX || nz < 0 || nz >= SizeZ || ny < 0 || ny >= SizeY)
-			{
-				HFree(distFromCenter);
-				HFree(result);
-				return;
-			}
-			if (arr[(SizeZ * SizeX) * ny + SizeX * nz + nx] != 0)
-			{
-				HFree(distFromCenter);
-				HFree(result);
-				return;
-			}
-			result[i] = (Vector3i_t){ nx, ny, nz };
+			HFree(distFromCenter);
+			HFree(result);
+			return; // 돌리지 않음
 		}
-	}
-	else if (spinAxis == AXIS_Y)
-	{
-		for (int i = 0; i < SIZE_OF_BLOCK; i++)
-		{
-			Vector3i_t temp = distFromCenter[i];
-			distFromCenter[i].Z = temp.X;
-			distFromCenter[i].X = temp.Z;
-
-			if (dir == DIR_LEFT)
-			{
-				distFromCenter[i].Z *= -1;
-			}
-			else if (dir == DIR_RIGHT)
-			{
-				distFromCenter[i].X *= -1;
-			}
-			
-			int nx = centerBlock.X + distFromCenter[i].X;
-			int nz = centerBlock.Z + distFromCenter[i].Z;
-			int ny = centerBlock.Y + distFromCenter[i].Y;
-
-			if (nx < 0 || nx >= SizeX || nz < 0 || nz >= SizeZ || ny < 0 || ny >= SizeY)
-			{
-				HFree(distFromCenter);
-				HFree(result);
-				return;
-			}
-			if (arr[(SizeZ * SizeX) * ny + SizeX * nz + nx] != 0)
-			{
-				HFree(distFromCenter);
-				HFree(result);
-				return;
-			}
-			result[i] = (Vector3i_t){ nx, ny, nz };
-		}
+		result[i] = (Vector3i_t){ nx, ny, nz }; // 돌릴 수 있으면 값 넣어주기
 	}
 	
-	for (int i = 0; i < NUMBER_OF_BLOCKS; i++)
+	for (int i = 0; i < NUMBER_OF_BLOCKS; i++) // 결과값을 반영시키기
 	{
 		block[i] = result[i];
 	}
@@ -1412,13 +1334,11 @@ void GameShutDown()
 
 
 	printf("+++++++++++++++++++++++\n");
-	printf("+GAME OVER : Score: %d +\n", gameScore);
+	printf("+GAME OVER : Score: %d+\n", gameScore);
 	printf("+++++++++++++++++++++++\n");
 
-	printf("\n==========memoryUsageHistory==========\n");
-	ReleaseStack(mapBufStack);
-	DumpHeap(NULL);
-	ReleaseMainMem();
+	
+
 	printf("\n==========Close Program========== \n");
 
 	for (int i = 0; i < 3; Sleep(1000))
@@ -1426,6 +1346,11 @@ void GameShutDown()
 		printf("%dsec later game close\n", 3 - (i++));
 		
 	}
+	system("pause");
+	printf("\n==========memoryUsageHistory==========\n");
+	DumpHeap(NULL);
+	ReleaseStack(mapBufStack);
+	ReleaseMainMem();
 	exit(1);
 
 }
@@ -1436,7 +1361,7 @@ void Update()
 
 		//~~~~~~~~~~~~~~ 8월 25 일 업데이트 
 		gameScore++;
-		if (gameScore % 50 == 0)
+		if (gameScore >= 50 * (gameLevel + 1))
 		{
 			blockDownTime -= 200;
 			gameLevel++;
@@ -1448,17 +1373,19 @@ void Update()
 			FixBlockInMap(BlockNumber, Block, (int*)mapDataBuf); // blockNumber번째 블록을 맵에다가 넣고
 		}
 		
-
+		int bonusScore = 0;
 		for (int i = 0; i < SizeY; i++) // 모든 층에
 		{
-			if (IsFullFloor((int*)mapDataBuf, i)) // 층이 있는지 체크하고
+			if (IsFullFloor(mapDataBuf, i)) // 다 찬 층이 있는지 체크하고
 			{
 				printf("\n!Floor Break! Bonus +10score\n");
 				gameScore += 10;
-				BreakFullFloor((int*)mapDataBuf, i); // 다 차면 부숴서 윗층들을 다 내리고
+				BreakFullFloor(mapDataBuf, i); // 다 찼으면 부숴서 윗층들을 다 내리고
 				i--;
+				bonusScore++;
 			}
 		}
+		gameScore += (bonusScore * (bonusScore + 1)) / 2 * 5;
 
 		BlockNumber = rand() % NUMBER_OF_BLOCKS + 1; // 새로운 블럭을 정하고
 		SetNewBlock(Block, BlockList[BlockNumber]);
@@ -1466,10 +1393,10 @@ void Update()
 		{
 			Block[i].Y = SizeY - 1;
 		}
-		if (mapDataBuf[SizeZ * SizeX * (SizeY - 1) ] != 0)
+		if (mapDataBuf[SizeZ * SizeX * (SizeY - 1)] != 0) // 만약 블럭이 더 내려갈 수 없다면
 		{
-			//GameShutDown();
-			bShouldRun = False;
+			bShouldRun = False; // 게임 종료
 		}
 	}
 }
+
