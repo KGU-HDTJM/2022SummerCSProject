@@ -1051,6 +1051,9 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'J':
 		J = True;
 		break;
+	case 'l':
+		gameLevel++;
+		break;
 		}
 	
 	default:
