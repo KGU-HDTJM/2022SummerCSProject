@@ -11,6 +11,19 @@
 #include "HDTJMDef.h"
 #include "StackAlloc.h"
 #include <time.h>
+
+
+
+ boolean_t H = FALSE;
+ boolean_t D = FALSE;
+ boolean_t T = FALSE;
+ boolean_t J = FALSE;
+ boolean_t M = FALSE;
+
+
+
+
+
 int imageWidht, imageHeight;
 GLubyte* Texture;
 int gameLevel = 1;
@@ -739,7 +752,8 @@ int main(int argc, char** argv)
 
 	glutInitWindowSize(1000, 1000);
 	glutInitWindowPosition(300, 200);
-	glClearColor(0.0F, 0.0F, 0.0F, 0.0F);//rgba (a: 투명도)
+
+
 	glutCreateWindow("Tetris");
 	
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -755,9 +769,6 @@ int main(int argc, char** argv)
 	glEnable(GL_LINE_SMOOTH);
 	glEnable(GL_POLYGON_SMOOTH);
 	glEnable(GL_TEXTURE_2D);
-
-
-
 
 	glutReshapeFunc(Reshape);
 	glutDisplayFunc(Display);
@@ -838,9 +849,8 @@ void Display(void)
 	if (ModelY < -1) ModelY = 1;
 	FrameCount++;
 
-
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(131.F / 255, 3.F / 255, 3.F / 255, 1.F);//rgba (a: 투명도) // 배경색
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
@@ -955,6 +965,7 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'M':
 	case 'm':
 		gridMode = (gridMode + 1) % 3;
+		M = True;
 		break;
 		}
 		// 블럭 움직이기
@@ -974,6 +985,7 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'D':
 	case 'd':
 		MoveBlock(+1, 0, 0, Block);
+		D = True;
 		break;
 	case 9://tap
 		MoveBlock(0, 0, -1, Block);
@@ -1029,12 +1041,32 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'p':
 		printf("%d\n", GetVoxelCount(mapDataBuf, SizeXZY));
 		break;
+	case 'H':
+		H = True;
+		break;
+	case 'T':
+		T = True;
+		break;
+	case 'J':
+		J = True;
+		break;
 		}
-	default:
 	
+	default:
 		break;
 	}
-
+	if (H && D && T && J && M)
+	{
+		printf("Easter Egg Mode!!!!");
+		Sleep(2000);
+		Texture = LoadBmp("../resource/TeamFaceBlock.bmp", &imageWidht, &imageHeight);
+		InitTexture(Texture, imageWidht, imageHeight);
+		H = FALSE;
+		D = FALSE;
+		T = FALSE;
+		J = FALSE;
+		M = FALSE;
+	}
 }
 
 int GetVoxelCount(int* arr, const int sizeMax)
