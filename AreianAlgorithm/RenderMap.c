@@ -14,7 +14,8 @@
 int imageWidht, imageHeight;
 GLubyte* Texture;
 int gameLevel = 1;
-int gameScore;
+int gameScore = 0;
+int blockDownTime = 2000;
 typedef struct
 {
 	Vector4f_t Vertex[8];
@@ -216,7 +217,7 @@ void BlockDown(void) {
 		if (!bShouldRun) {
 			_endthread();
 		}
-		Sleep(2000);
+		Sleep(blockDownTime);
 		MoveBlock(0, 0, -1, Block);
 	}
 	
@@ -224,8 +225,6 @@ void BlockDown(void) {
 
 void DrawWorld(float size, int imgCount, int levelTexture);
 void GameShutDown();
-
-
 
 //라이브러리 들어오면 대체할 함수 
 void VertexFaceMapping(int* face, size_t facelen, Vector3f_t* vertex, Vector3f_t* vertexBuffer)
@@ -1401,10 +1400,14 @@ void Update()
 	if (bIsArrived == True) // 블록이 바닥(or 다른 블록)에 안착하면
 	{	
 
-		//~~~~~~~~~~~~~~ 8월 25 일 업데이트 
+		
 		gameScore++;
-		if (gameScore % 50 == 0 ) gameLevel++;
-		//~~~~~~~~~~~~~~
+		if (gameScore % 50 == 0)
+		{
+			gameLevel++;
+			if(blockDownTime > 500) // 0.5 초 밑으로는 넘 힘듬
+			blockDownTime -= 200;//난이도 올리기
+		}
 		bIsArrived = False;
 		if (BlockNumber != FIRST_BLOCK) // 맨 처음 실행하는게 아니면
 		{
