@@ -11,10 +11,24 @@
 #include "HDTJMDef.h"
 #include "StackAlloc.h"
 #include <time.h>
+
+
+
+ boolean_t H = FALSE;
+ boolean_t D = FALSE;
+ boolean_t T = FALSE;
+ boolean_t J = FALSE;
+ boolean_t M = FALSE;
+
+
+
+
+
 int imageWidht, imageHeight;
 GLubyte* Texture;
 int gameLevel = 1;
 int gameScore;
+int blockDownTime = 2000;
 typedef struct
 {
 	Vector4f_t Vertex[8];
@@ -38,7 +52,7 @@ typedef struct
 
 int inputPosX, inputPosZ, inputPosY;
 
-int SizeY = 10;
+int SizeY = 12;
 int SizeZ = 4;
 int SizeX = 4;
 int SizeXZY;
@@ -133,7 +147,7 @@ typedef struct {
 typedef struct {
 	GLfloat Voxel[36][5];
 }RenderModel_t;
-GLfloat eyeR = 1.8F;
+GLfloat eyeR = 2.5F;
 GLfloat camx, camy, camz;
 GLfloat hrzndegree = -60.0F, vrtcldegree = 60.0F;
 
@@ -189,17 +203,39 @@ void DrawFrame(int num)
 	glutPostRedisplay();
 	glutTimerFunc(1, DrawFrame, 0);
 }
-void FrameRatingThread(void)
+void GameInfoRatingThread(void)
 {
-	
-	while (bShouldRun)
+	while (1)
 	{
+		if (!bShouldRun)
+		{
+			_endthread();
+			return;
+		}
 		Sleep(1000);
-		system("cls");
-		printf("FPS:%llu\n", FrameCount);
-		FrameCount = 0;	
+		if (bShouldRun)
+		{
+			system("cls");
+			printf("FPS:%llu\n<LEVEL %d> \nSCORE : %d\n", FrameCount,gameLevel, gameScore);
+			FrameCount = 0;
+		}
+		
+	
 	}
+	
 }
+void BlockDownThread(void) {
+	while(bShouldRun)
+	{
+		if (!bShouldRun) {
+			_endthread();
+		}
+		Sleep(blockDownTime);
+		MoveBlock(0, 0, -1, Block);
+	}
+	
+}
+
 void DrawWorld(float size, int imgCount, int levelTexture);
 void GameShutDown();
 
@@ -216,17 +252,9 @@ void VertexFaceMapping(int* face, size_t facelen, Vector3f_t* vertex, Vector3f_t
 	}
 }
 
-//-------------------------------------------------
-
-
-//--------------------------------------------------------------------------------------
-
-
 void CreateTexBuffer(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, VoxelTex_t* texBuf, int imgCount);
 void LoadMapBuf(int* mapDataBuf, int sizeX, int sizeY, int sizeZ, GLfloat voxelSize, int voxelCount,
 	VoxelModel* outVoxelAddress, VoxelModel* outGridAddress, Voxel_t* voxelArr, Voxel_t* gridArr, VoxelTex_t* outTexBufAddress);
-
-
 
 void LoadMapBuf(int* mapDataBuf, int sizeX, int sizeY, int sizeZ, GLfloat voxelSize, int voxelCount,
 	VoxelModel* outVoxelAddress, VoxelModel* outGridAddress, Voxel_t* voxelArr, Voxel_t* gridArr, VoxelTex_t* outTexBufAddress)
@@ -284,7 +312,7 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 	VoxelModel* outVoxelAdress, VoxelModel* outGridAdress, VoxelTex_t* textureBufAddress)
 {	
 	Vector2f_t texBuf[VOXEL_SIZE_QUADS] = {0,};
-	
+	if (bShouldRun) {
 		if (gridMode == MAP_GRID_MODE)
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -311,7 +339,8 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 		glDrawArrays(GL_TRIANGLES, 0, VOXEL_SIZE_TRIANGLES * voxelCount);
 
 	
-	/*
+	}
+	else {// 게임 오버 렌더 
 		Vector2f_t texCoord[4] = {
 			{0.F, 0.F},
 			{1.F ,0.F},
@@ -322,7 +351,7 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 			texBuf[i].X = texCoord[i % 4].X;
 			texBuf[i].Y = texCoord[i % 4].Y;
 		}
-		Texture = LoadBmp("../resource/GameOut.bmp", &imageWidht, &imageHeight);
+		Texture = LoadBmp("../resource/GameOver.bmp", &imageWidht, &imageHeight);
 		
 		InitTexture(Texture, imageWidht, imageHeight);
 		glTexCoordPointer(2, GL_FLOAT, 0, texBuf);
@@ -332,13 +361,7 @@ void RenderMap(RenderModel_t* renderBuf, int* mapDataBuf, int gridSize, int voxe
 		glDrawArrays(GL_QUADS, 0, VOXEL_SIZE_QUADS);
 		glutSwapBuffers();
 		HFree(Texture);
-		ReleaseStack(mapBufStack);
-		DumpHeap(NULL);
-		ReleaseMainMem();
-		Sleep(3000);
-		_endthread();
-
-	*/
+	}
 	 
 
 }
@@ -584,7 +607,7 @@ void DrawTetrisMap(int* mapDataBuf, int sizeX, int sizeZ, int sizeY, GLfloat vox
 //modelTracer
 void DrawControlModel(Vector3i_t* blockModel, int voxelCount, int sizeX, int sizeY, int sizeZ, int* dataBuf, float voxelSize, int textureID, int imgCount)
 {
-	if (textureID == 0) return;
+	if (textureID == 0 || !bShouldRun) return;
 	float tempX, tempY, tempZ;
 	int x, y, z;
 	Vector3f_t stdVoxel[8] = {
@@ -729,7 +752,8 @@ int main(int argc, char** argv)
 
 	glutInitWindowSize(1000, 1000);
 	glutInitWindowPosition(300, 200);
-	glClearColor(0.0F, 0.0F, 0.0F, 0.0F);//rgba (a: 투명도)
+
+
 	glutCreateWindow("Tetris");
 	
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -746,9 +770,6 @@ int main(int argc, char** argv)
 	glEnable(GL_POLYGON_SMOOTH);
 	glEnable(GL_TEXTURE_2D);
 
-
-
-
 	glutReshapeFunc(Reshape);
 	glutDisplayFunc(Display);
 	glutKeyboardFunc(Keyboard);
@@ -757,15 +778,10 @@ int main(int argc, char** argv)
 	glutMouseWheelFunc(WheelMouse);
 
 
-	_beginthread(FrameRatingThread, 0, (void*)0);
+	_beginthread(GameInfoRatingThread, 0, (void*)0);
 	//_beginthread((_beginthread_proc_type)InputPositionThread, 0, (void*)0);
-
+	_beginthread(BlockDownThread,0,(void*)0);
 	glutMainLoop();
-
-	_endthread();
-	ReleaseStack(mapBufStack);
-	DumpHeap(NULL);
-	ReleaseMainMem();
 	return 0;
 }
 GLubyte* LoadBmp(const char* imagePath, int* width, int* height)
@@ -833,9 +849,8 @@ void Display(void)
 	if (ModelY < -1) ModelY = 1;
 	FrameCount++;
 
-
-
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(131.F / 255, 3.F / 255, 3.F / 255, 1.F);//rgba (a: 투명도) // 배경색
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	
@@ -853,8 +868,6 @@ void Display(void)
 
 
 	Update();
-
-	
 	DrawControlModel(Block, SIZE_OF_BLOCK, SizeX, SizeY, SizeZ, (int*)mapDataBuf, VOXEL_SIZE, BlockNumber, IMG_COUNT);
 	DrawTetrisMap((int*)mapDataBuf, SizeX, SizeZ, SizeY, VOXEL_SIZE);
 	DrawWorld(WORLD_MAP_SIZE , IMG_COUNT, gameLevel);
@@ -864,10 +877,10 @@ void Display(void)
 	glFlush();
 	if (!bShouldRun) 
 	{
-		return;
+		GameShutDown();
 	}
 	
-	while (clock() - i < 6)
+	while (clock() - i <= 1)
 	{
 		Sleep(1);
 	}
@@ -952,6 +965,7 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'M':
 	case 'm':
 		gridMode = (gridMode + 1) % 3;
+		M = True;
 		break;
 		}
 		// 블럭 움직이기
@@ -971,8 +985,9 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'D':
 	case 'd':
 		MoveBlock(+1, 0, 0, Block);
+		D = True;
 		break;
-	case 9:
+	case 9://tap
 		MoveBlock(0, 0, -1, Block);
 		break;
 		}
@@ -1026,12 +1041,31 @@ void Keyboard(unsigned char key, int x, int y)
 	case 'p':
 		printf("%d\n", GetVoxelCount(mapDataBuf, SizeXZY));
 		break;
+	case 'H':
+		H = True;
+		break;
+	case 'T':
+		T = True;
+		break;
+	case 'J':
+		J = True;
+		break;
 		}
-
-
-
+	
 	default:
 		break;
+	}
+	if (H && D && T && J && M)
+	{
+		printf("Easter Egg Mode!!!!");
+		Sleep(2000);
+		Texture = LoadBmp("../resource/TeamFaceBlock.bmp", &imageWidht, &imageHeight);
+		InitTexture(Texture, imageWidht, imageHeight);
+		H = FALSE;
+		D = FALSE;
+		T = FALSE;
+		J = FALSE;
+		M = FALSE;
 	}
 }
 
@@ -1375,8 +1409,25 @@ void PrintMap(int* map)
 void GameShutDown()
 {
 	system("cls");
-	printf("GAME OVER\nScore: %d", gameScore);
-	bShouldRun = False;
+
+
+	printf("+++++++++++++++++++++++\n");
+	printf("+GAME OVER : Score: %d +\n", gameScore);
+	printf("+++++++++++++++++++++++\n");
+
+	printf("\n==========memoryUsageHistory==========\n");
+	ReleaseStack(mapBufStack);
+	DumpHeap(NULL);
+	ReleaseMainMem();
+	printf("\n==========Close Program========== \n");
+
+	for (int i = 0; i < 3; Sleep(1000))
+	{
+		printf("%dsec later game close\n", 3 - (i++));
+		
+	}
+	exit(1);
+
 }
 void Update()
 {
@@ -1385,7 +1436,11 @@ void Update()
 
 		//~~~~~~~~~~~~~~ 8월 25 일 업데이트 
 		gameScore++;
-		if (gameScore % 50 == 0 ) gameLevel++;
+		if (gameScore % 50 == 0)
+		{
+			blockDownTime -= 200;
+			gameLevel++;
+		}
 		//~~~~~~~~~~~~~~
 		bIsArrived = False;
 		if (BlockNumber != FIRST_BLOCK) // 맨 처음 실행하는게 아니면
@@ -1398,6 +1453,8 @@ void Update()
 		{
 			if (IsFullFloor((int*)mapDataBuf, i)) // 층이 있는지 체크하고
 			{
+				printf("\n!Floor Break! Bonus +10score\n");
+				gameScore += 10;
 				BreakFullFloor((int*)mapDataBuf, i); // 다 차면 부숴서 윗층들을 다 내리고
 				i--;
 			}
@@ -1411,7 +1468,8 @@ void Update()
 		}
 		if (mapDataBuf[SizeZ * SizeX * (SizeY - 1) ] != 0)
 		{
-			GameShutDown();
+			//GameShutDown();
+			bShouldRun = False;
 		}
 	}
 }
