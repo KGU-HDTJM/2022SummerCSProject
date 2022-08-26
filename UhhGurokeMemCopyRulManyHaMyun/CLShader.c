@@ -14,28 +14,38 @@
 #include "CLShader.h"
 #define KERNEL_FILE_NAME "shader.cl"
 #define MEM_BLOCK_SIZE (1 << 16)
-#define MAX_BUFFER 1<<16
+#define MAX_BUFFER (1<<16)
+#define KERNEL_COUNT 3
+#define MEM_BLOCK_COUNT 8
 
-static cl_platform_id	Platform;
+typedef enum
+{
+	VoxelPositionArray = 0, TextureSource = 1, PolygonArray = 2, NormalBuffer = 5, TextureCoord = 6, TextureResult = 7
+} eClMemIdx_t;
+
+static cl_platform_id		Platform;
 static cl_device_id		Device;
-static cl_context		Context;
+static cl_context			Context;
 static cl_command_queue	CmdQueue;
 static cl_program		Program;
-static size_t			KernelCount;
-static size_t			BufferCount;
+static size_t				BufferCount;
 
 static eClDeviceType	DeviceType;
 
 static cl_mem* MemBuffer;
-static cl_kernel* Kernels;
+static cl_kernel VertexShader;
+static cl_kernel PixelShader;
+static cl_kernel TextureMapping;
+
 static cl_uint			ComputeUnitCount;
 static cl_uint          MaxWorkItemDim;
 static cl_uint* MaxWorkItemSizes;
 static size_t			MaxClMemSize;
 static size_t			MaxWorkGroup;
 static size_t			TextrueSize;
+static size_t          TextrueHeight;
+static size_t          TextrueWidth;
 
-//MAX_SOUCRE_SIZE 오류있음 이거 고칠것, 그리고 파일 링크 시키는거하기
 int InitCL(void* textureBuffer, size_t textureWidth, size_t textureHeight, size_t texturePixelSize)
 {
 	size_t errRet = 0;
@@ -103,16 +113,11 @@ int InitCL(void* textureBuffer, size_t textureWidth, size_t textureHeight, size_
 		HFree(log);
 		return -1;
 	}
-
-	Kernels = HAlloc(sizeof(cl_kernel) * 7, False, NULL); // 이코드 이해 안감 머선 코드인지 모르겠음... 
-	Kernels[0] = clCreateKernel(Program, "ConvertVoxelFromGrid", &errRet);
-	Kernels[1] = clCreateKernel(Program, "TransVoxel", &errRet);
-	Kernels[2] = clCreateKernel(Program, "Projection", &errRet);
-	Kernels[3] = clCreateKernel(Program, "FaceMapping", &errRet);
-	Kernels[4] = clCreateKernel(Program, "GetNormal", &errRet);
-	Kernels[5] = clCreateKernel(Program, "matrix_mult", &errRet);
-	Kernels[6] = clCreateKernel(Program, "transpose", &errRet);
-
+	
+	VertexShader = clCreateKernel(Program, "VertexShader", &errRet);
+	PixelShader = clCreateKernel(Program, "PixelShader", &errRet);
+	TextureMapping = clCreateKernel(Program, "TextureMapping", &errRet);
+	MemBuffer = HAlloc(sizeof(cl_mem) * MEM_BLOCK_COUNT, False, NULL);
 	// VoxelPositionArray buffer
 	MemBuffer[0] = clCreateBuffer(Context, CL_MEM_READ_ONLY, MEM_BLOCK_SIZE, NULL, &errRet);
 	// Texture Source
@@ -121,43 +126,113 @@ int InitCL(void* textureBuffer, size_t textureWidth, size_t textureHeight, size_
 	MemBuffer[2] = clCreateBuffer(Context, CL_MEM_READ_WRITE, MEM_BLOCK_SIZE, NULL, &errRet);
 	MemBuffer[3] = clCreateBuffer(Context, CL_MEM_READ_WRITE, MEM_BLOCK_SIZE, NULL, &errRet);
 	MemBuffer[4] = clCreateBuffer(Context, CL_MEM_READ_WRITE, MEM_BLOCK_SIZE, NULL, &errRet);
-	MemBuffer[5] = clCreateBuffer(Context, CL_MEM_WRITE_ONLY, MEM_BLOCK_SIZE, NULL, &errRet);
-
+	// normal buffer
+	MemBuffer[5] = clCreateBuffer(Context, CL_MEM_READ_WRITE, MEM_BLOCK_SIZE, NULL, &errRet);
+	// texture coord
+	MemBuffer[6] = clCreateBuffer(Context, CL_MEM_READ_WRITE, MEM_BLOCK_SIZE, NULL, &errRet);
 	// Texture Output
-	MemBuffer[6] = clCreateBuffer(Context, CL_MEM_WRITE_ONLY, TextrueSize * 3, NULL, &errRet);
+	MemBuffer[7] = clCreateBuffer(Context, CL_MEM_WRITE_ONLY, TextrueSize * 3, NULL, &errRet);
 }
+//
+//size_t ClVertexShader(
+//	Vector3f_t* outPolygonArr, 
+//	Vector2f_t* outTextureCoord, 
+//	Matrix4_t* transMatrix,
+//	Vector3i_t* gridSize,
+//	VoxelPos_t* voxelPosArr,
+//	size_t length)
+//{
+//	size_t gItem, lItem;
+//	clEnqueueWriteBuffer(CmdQueue, MemBuffer[5], CL_TRUE, 1, sizeof(VoxelPos_t) * length, voxelPosArr, NULL, NULL, NULL);
+//	clSetKernelArg(Kernels[0], 0, sizeof(cl_mem), MemBuffer[]);
+//	clSetKernelArg(Kernels[0], 1,sizeof(cl_mem), MemBuffer[]);
+//	clEnqueueNDRangeKernel(CmdQueue, Kernels[0], 1, NULL, &gItem, &lItem, 0, NULL, NULL);
+//	clEnqueueReadBuffer(CmdQueue, MemBuffer[2], CL_TRUE, 1, sizeof(Vector3f_t) * 36 * length, outPolygonArr, NULL, NULL, NULL);
+//	
+//	return;
+//}
+//
+//void ClPixelShader(void* outTexture, cl_mem* normal,  Vector3f_t view, Light_t* lightArr, size_t lightCount)
+//{
+//	size_t gItem[3];
+//	size_t lItem[3];
+//
+//
+//	clEnqueueWriteBuffer(CmdQueue, MemBuffer[5], CL_TRUE, 1, sizeof(VoxelPos_t) * length, voxelPosArr, NULL, NULL, NULL);
+//	clSetKernelArg(PixelShader, 0, sizeof(cl_mem), MemBuffer[0]);
+//	clSetKernelArg(PixelShader, 1, sizeof(cl_mem), MemBuffer[5]);
+//	clEnqueueNDRangeKernel(CmdQueue, PixelShader, 1, NULL, &gItem, &lItem, 0, NULL, NULL);
+//	clEnqueueReadBuffer(CmdQueue, MemBuffer[2], CL_TRUE, 1, sizeof(Vector3f_t) * 36 * length, outTexture, NULL, NULL, NULL);
+//}
+//
+//void ClTextureMapping(Vector2f_t* textureCoord, Vector3f_t* normal, size_t length, Vector3f_t* faceID)
+//{
+//	size_t gItem, lItem;
+//
+//	clEnqueueWriteBuffer(CmdQueue, MemBuffer[5], CL_TRUE, 1, sizeof(VoxelPos_t) * length, voxelPosArr, NULL, NULL, NULL);
+//	clSetKernelArg(Kernels[0], 0, sizeof(cl_mem), MemBuffer[0]);
+//	clSetKernelArg(Kernels[0], 1, sizeof(cl_mem), MemBuffer[5]);
+//	clEnqueueNDRangeKernel(CmdQueue, Kernels[0], 1, NULL, &gItem, &lItem, 0, NULL, NULL);
+//	clEnqueueReadBuffer(CmdQueue, MemBuffer[2], CL_TRUE, 1, sizeof(Vector3f_t) * 36 * length, outPolygonArr, NULL, NULL, NULL);
+//}
+//
 
-
-size_t ClVertexShader(Vector3f_t* outPolygonArr, VoxelPos_t* voxelPosArr, size_t length)
+size_t ClVertexShader(Vector3f_t* outPolygonArr,
+	Vector2f_t* outTextureCoord, cl_mem* outNormalBuffer,
+	VoxelPos_t* voxelPositionArr, size_t length, Matrix4_t* transMatrix, Vector3i_t* gridSize
+)
 {
-	size_t gItem, lItem;
-
-	clEnqueueWriteBuffer(CmdQueue, MemBuffer[5], CL_TRUE, 1, sizeof(VoxelPos_t) * length, voxelPosArr, NULL, NULL, NULL);
-	clSetKernelArg(Kernels[0], 0, sizeof(cl_mem), MemBuffer[2]);
-	clSetKernelArg(Kernels[0], 1,sizeof(cl_mem), MemBuffer[5]);
-	clEnqueueNDRangeKernel(CmdQueue, Kernels[0], 1, NULL, &gItem, &lItem, 0, NULL, NULL);
-	clEnqueueReadBuffer(CmdQueue, MemBuffer[2], CL_TRUE, 1, sizeof(Vector3f_t) * 36 * length, outPolygonArr, NULL, NULL, NULL);
+	int faceCount; 
+	size_t polygonArrLength = length * 3;
+	clEnqueueWriteBuffer(CmdQueue, MemBuffer[VoxelPositionArray], CL_TRUE, 0, length, voxelPositionArr, NULL, NULL, NULL);
+	clSetKernelArg(VertexShader, 0, sizeof(cl_mem), MemBuffer[PolygonArray]);
+	clSetKernelArg(VertexShader, 1, sizeof(cl_mem), MemBuffer[TextureCoord]);
+	clSetKernelArg(VertexShader, 2, sizeof(cl_mem), MemBuffer[NormalBuffer]);
+	clSetKernelArg(VertexShader, 3, sizeof(cl_mem), MemBuffer[VoxelPositionArray]);
+	clSetKernelArg(VertexShader, 4, sizeof(Matrix4_t), &transMatrix);
+	clSetKernelArg(VertexShader, 5, sizeof(Vector3i_t), &gridSize);
+	clSetKernelArg(VertexShader, 6, sizeof(int), &faceCount);
+	clEnqueueNDRangeKernel(CmdQueue, VertexShader, 1,NULL, &length, 1, NULL, NULL, NULL);
+	clEnqueueReadBuffer(CmdQueue, MemBuffer[PolygonArray], CL_TRUE, 0, sizeof(int), &faceCount, NULL, NULL, NULL);
+	clEnqueueReadBuffer(CmdQueue, MemBuffer[PolygonArray], CL_TRUE, 0, sizeof(Vector3f_t)*polygonArrLength * faceCount , outPolygonArr, NULL, NULL, NULL);
+	clEnqueueReadBuffer(CmdQueue, MemBuffer[TextureCoord], CL_TRUE, 0, sizeof(Vector2f_t)* polygonArrLength* faceCount, outTextureCoord , NULL, NULL, NULL);
 	
-	return;
+	return faceCount;
 }
 
-void PixelShader(void* outTexture, Light_t* lightArr, size_t lightCount)
+void ClPixelShader(char* outPixel, int length, Vector3f_t* normal, 
+	Vector3f_t* view, Light_t* lightArr, int* lightLength, char* textureSource, size_t faceCount)
 {
-	byte_t resultLen;
-
-	clEnqueueWriteBuffer(CmdQueue, MemBuffer[5], CL_TRUE, 1, sizeof(VoxelPos_t) * length, voxelPosArr, NULL, NULL, NULL);
-	clSetKernelArg(Kernels[0], 0, sizeof(cl_mem), MemBuffer[2]);
-	clSetKernelArg(Kernels[0], 1, sizeof(cl_mem), MemBuffer[5]);
-	clEnqueueNDRangeKernel(CmdQueue, Kernels[0], 1, NULL, &gItem, &lItem, 0, NULL, NULL);
-	clEnqueueReadBuffer(CmdQueue, MemBuffer[2], CL_TRUE, 1, sizeof(Vector3f_t) * 36 * length, outPolygonArr, NULL, NULL, NULL);
+	size_t global[3] = { TextrueWidth, TextrueHeight, 3 };
+	clEnqueueWriteBuffer(CmdQueue, MemBuffer[0], CL_TRUE, 0, sizeof(char) *  length, normal, NULL, NULL, NULL);
+	clEnqueueWriteBuffer(CmdQueue, MemBuffer[1], CL_TRUE, 0, sizeof(Vector3f_t), view, NULL, NULL, NULL);
+	clEnqueueWriteBuffer(CmdQueue, MemBuffer[2], CL_TRUE, 0, sizeof(Light_t), lightArr, NULL, NULL, NULL);
+	clEnqueueWriteBuffer(CmdQueue, MemBuffer[3], CL_TRUE, 0, sizeof(char)* TextrueSize, textureSource, NULL, NULL, NULL);
+	clSetKernelArg(PixelShader, 0, sizeof(cl_mem), MemBuffer[0]);
+	clSetKernelArg(PixelShader, 1, sizeof(Vector3f_t), &normal);
+	clSetKernelArg(PixelShader, 2, sizeof(cl_mem), MemBuffer[1]);
+	clSetKernelArg(PixelShader, 3, sizeof(cl_mem), MemBuffer[2]);
+	clSetKernelArg(PixelShader, 4, sizeof(int), &lightLength);
+	clSetKernelArg(PixelShader, 4, sizeof(cl_mem), MemBuffer[3]);
+	clEnqueueNDRangeKernel(CmdQueue, PixelShader, 1,NULL, &global, 1, NULL, NULL, NULL);
+	clEnqueueReadBuffer(CmdQueue, MemBuffer[4], CL_TRUE, 0, sizeof(char) * faceCount, outPixel, NULL, NULL, NULL);
 }
 
+void ClTextureMapping(Vector2f_t* outTextureCoord, cl_mem* normal, Vector3f_t* normalID, int faceCount)
+{
+	clEnqueueReadBuffer(CmdQueue, )
+}
 void EndCL(void)
 {
 	clFlush(CmdQueue);
 	clFinish(CmdQueue);
-	clReleaseKernel(Kernels);
-	clReleaseMemObject(MemBuffer);
+	clReleaseKernel(VertexShader);
+	clReleaseKernel(PixelShader);
+	clReleaseKernel(TextureMapping);
+	for (size_t i = 0; i < ; i++)
+	{
+
+	}
 	clReleaseProgram(Program);
 	clReleaseCommandQueue(CmdQueue);
 	clReleaseContext(Context);
