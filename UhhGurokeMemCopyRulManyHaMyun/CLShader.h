@@ -36,9 +36,11 @@ typedef enum
 } eKernelID_t;
 
 
-CL_API int InitCL(void);
-CL_API void ClVertexShader(void);
-CL_API void ClPixelShader(void);
-CL_API void ReleaseCL(void);
+CL_API int __fastcall InitCL(void* textureBuffer, size_t textureWidth, size_t textureHeight, size_t texturePixelSize);
+CL_API size_t __fastcall ClVertexShader(Vector3f_t* outPolygonArr,
+    Vector2f_t* outTextureCoord, cl_mem* outNormalBuffer,
+    VoxelPos_t* voxelPositionArr, size_t length, Matrix4_t* transMatrix, Vector3i_t* gridSize );
+//CL_API void ClPixelShader(void);
+CL_API void __fastcall  ReleaseCL(void);
 
 #endif
