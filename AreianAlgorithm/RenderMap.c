@@ -881,7 +881,7 @@ void Display(void)
 		GameShutDown();
 	}
 	
-	while (clock() - i <= 6)
+	while (clock() - i <= 5)
 	{
 		Sleep(1);
 	}
