@@ -1,5 +1,4 @@
 #define STACK_ALLOCATION_EXPORTS
-
 #include "StackAlloc.h"
 
 pStack_t __fastcall _CreateStack(pHeap_t heap, size_t size)
